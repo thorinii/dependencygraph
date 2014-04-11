@@ -15,6 +15,8 @@ public class ClassAnalyser {
 
         dependencies.add(classFile.getParent());
 
+        classFile.getConstructors().forEach(c -> dependencies.addAll(c.getTypes()));
+
         return new ClassAnalysis(classFile.getName(),
                                  classFile.getParent(),
                                  dependencies);

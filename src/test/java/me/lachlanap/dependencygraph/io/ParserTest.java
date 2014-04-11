@@ -41,7 +41,6 @@ public class ParserTest {
 
         ClassFile classFile = parser.parse(bytecode);
 
-        assertThat(classFile.getConstructors().size(), is(1));
         assertThat(classFile.getConstructors().get(0).getArgumentTypes().size(), is(0));
     }
 
@@ -72,7 +71,6 @@ public class ParserTest {
 
         ClassFile classFile = parser.parse(bytecode);
 
-        assertThat(classFile.getMethods().size(), is(5));
         assertThat(classFile.getMethod("equals").get().getArgumentTypes(), hasItem("java.lang.Object"));
     }
 
@@ -83,7 +81,36 @@ public class ParserTest {
 
         ClassFile classFile = parser.parse(bytecode);
 
-        assertThat(classFile.getMethods().size(), is(5));
         assertThat(classFile.getMethod("getName").get().getReturnType().get(), is("java.lang.String"));
+    }
+
+    @Test
+    public void parsesCodeWithNew() {
+        byte[] bytecode = loadClassFile("/NameAlreadyTakenException.class");
+        Parser parser = new Parser();
+
+        ClassFile classFile = parser.parse(bytecode);
+
+        assertThat(classFile.getConstructors().get(0).getCode().getReferencedTypes(), hasItem("java.lang.StringBuilder"));
+    }
+
+    @Test
+    public void parsesCodeWithInvokeSpecial() {
+        byte[] bytecode = loadClassFile("/UserLostException.class");
+        Parser parser = new Parser();
+
+        ClassFile classFile = parser.parse(bytecode);
+
+        assertThat(classFile.getConstructors().get(0).getCode().getReferencedTypes(), hasItem("java.lang.String"));
+    }
+
+    @Test
+    public void parsesField() {
+        byte[] bytecode = loadClassFile("/Player.class");
+        Parser parser = new Parser();
+
+        ClassFile classFile = parser.parse(bytecode);
+
+        assertThat(classFile.getField("name").get().getType(), is("java.lang.String"));
     }
 }

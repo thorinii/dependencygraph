@@ -27,4 +27,23 @@ public class ClassAnalyserIntegrationTest {
                                                         "java.lang.String"));
     }
 
+    @Test
+    public void analysesSimpleDataClassCorrectly() {
+        String classResource = "/Player.class";
+        Loader loader = new ResourceLoader();
+        Parser parser = new Parser();
+        ClassAnalyser analyser = new ClassAnalyser();
+
+        byte[] bytecode = loader.load(classResource);
+        ClassFile classFile = parser.parse(bytecode);
+        ClassAnalysis analysis = analyser.analyse(classFile);
+
+        assertThat(analysis.getParent(), is("java.lang.Object"));
+        assertThat(analysis.getDependencies(), hasItems("java.lang.String",
+                                                        "java.lang.Object",
+                                                        "java.lang.Class",
+                                                        "java.lang.StringBuilder"));
+        assertThat(analysis.getDependencies(), not(hasItem("com.planticle.eatit.game.session.Player")));
+    }
+
 }

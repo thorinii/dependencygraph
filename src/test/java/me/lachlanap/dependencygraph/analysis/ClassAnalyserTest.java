@@ -31,7 +31,7 @@ public class ClassAnalyserTest {
     }
 
     @Test
-    public void capturesStaticReferencesInConstructor() {
+    public void capturesStaticReferencesInAConstructor() {
         ClassAnalyser analyser = new ClassAnalyser();
         ClassFile classFile = new ClassFileBuilder("test.Blank")
                 .appendConstructor(Arrays.asList("test.InjectedClass"))
@@ -52,6 +52,54 @@ public class ClassAnalyserTest {
         ClassAnalysis analysis = analyser.analyse(classFile);
 
         assertThat(analysis.getDependencies(), hasItems("test.ArgumentClass", "test.ReturnClass"));
+    }
+
+    @Test
+    public void capturesStaticReferencesInAField() {
+        ClassAnalyser analyser = new ClassAnalyser();
+        ClassFile classFile = new ClassFileBuilder("test.Blank")
+                .appendField("method", "test.ValueClass")
+                .build();
+
+        ClassAnalysis analysis = analyser.analyse(classFile);
+
+        assertThat(analysis.getDependencies(), hasItems("test.ValueClass"));
+    }
+
+    @Test
+    public void capturesExecutableReferencesInAConstructor() {
+        ClassAnalyser analyser = new ClassAnalyser();
+        ClassFile classFile = new ClassFileBuilder("test.Blank")
+                .appendConstructorWithCode(Arrays.asList("test.ReferencedInCode"))
+                .build();
+
+        ClassAnalysis analysis = analyser.analyse(classFile);
+
+        assertThat(analysis.getDependencies(), hasItems("test.ReferencedInCode"));
+    }
+
+    @Test
+    public void capturesExecutableReferencesInAMethod() {
+        ClassAnalyser analyser = new ClassAnalyser();
+        ClassFile classFile = new ClassFileBuilder("test.Blank")
+                .appendMethodWithCode("method", Arrays.asList("test.ReferencedInCode"))
+                .build();
+
+        ClassAnalysis analysis = analyser.analyse(classFile);
+
+        assertThat(analysis.getDependencies(), hasItems("test.ReferencedInCode"));
+    }
+
+    @Test
+    public void doesNotReferenceSelf() {
+        ClassAnalyser analyser = new ClassAnalyser();
+        ClassFile classFile = new ClassFileBuilder("test.Blank")
+                .appendMethodWithCode("method", Arrays.asList("test.ReferencedInCode", "test.Blank"))
+                .build();
+
+        ClassAnalysis analysis = analyser.analyse(classFile);
+
+        assertThat(analysis.getDependencies(), not(hasItem("test.Blank")));
     }
 
     private ClassFile makeClassFile(String name, String parent) {

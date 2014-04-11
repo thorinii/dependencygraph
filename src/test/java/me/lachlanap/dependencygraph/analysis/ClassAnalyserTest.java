@@ -33,13 +33,25 @@ public class ClassAnalyserTest {
     @Test
     public void capturesStaticReferencesInConstructor() {
         ClassAnalyser analyser = new ClassAnalyser();
-        ClassFile classFile = new ClassFileBuilder("test.Blank", "test.Parent")
+        ClassFile classFile = new ClassFileBuilder("test.Blank")
                 .appendConstructor(Arrays.asList("test.InjectedClass"))
                 .build();
 
         ClassAnalysis analysis = analyser.analyse(classFile);
 
         assertThat(analysis.getDependencies(), hasItems("test.InjectedClass"));
+    }
+
+    @Test
+    public void capturesStaticReferencesInAMethod() {
+        ClassAnalyser analyser = new ClassAnalyser();
+        ClassFile classFile = new ClassFileBuilder("test.Blank")
+                .appendMethod("method", "test.ReturnClass", Arrays.asList("test.ArgumentClass"))
+                .build();
+
+        ClassAnalysis analysis = analyser.analyse(classFile);
+
+        assertThat(analysis.getDependencies(), hasItems("test.ArgumentClass", "test.ReturnClass"));
     }
 
     private ClassFile makeClassFile(String name, String parent) {

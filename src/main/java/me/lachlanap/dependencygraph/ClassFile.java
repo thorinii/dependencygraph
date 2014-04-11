@@ -1,6 +1,7 @@
 package me.lachlanap.dependencygraph;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  *
@@ -10,12 +11,16 @@ public class ClassFile {
 
     private final String name;
     private final String parent;
-    private final List<ConstructorTypes> constructors;
+    private final List<Method> constructors;
+    private final List<Method> methods;
 
-    public ClassFile(String name, String parent, List<ConstructorTypes> constructors) {
+    public ClassFile(String name, String parent,
+                     List<Method> constructors,
+                     List<Method> methods) {
         this.name = name;
         this.parent = parent;
         this.constructors = constructors;
+        this.methods = methods;
     }
 
     public String getName() {
@@ -26,25 +31,53 @@ public class ClassFile {
         return parent;
     }
 
-    public List<ConstructorTypes> getConstructors() {
+    public List<Method> getConstructors() {
         return constructors;
     }
 
-    public static class ConstructorTypes {
+    public List<Method> getMethods() {
+        return methods;
+    }
 
-        private final List<String> types;
+    public Optional<Method> getMethod(String name) {
+        return methods.stream()
+                .filter(m -> m.getName().equals(name))
+                .findAny();
+    }
 
-        public ConstructorTypes(List<String> types) {
-            this.types = types;
+    public static class Method {
+
+        private final String name;
+        private final List<String> arguments;
+        private final Optional<String> returnType;
+
+        public Method(String name, List<String> arguments) {
+            this.name = name;
+            this.arguments = arguments;
+            this.returnType = Optional.empty();
         }
 
-        public List<String> getTypes() {
-            return types;
+        public Method(String name, List<String> arguments, Optional<String> returnType) {
+            this.name = name;
+            this.arguments = arguments;
+            this.returnType = returnType;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public List<String> getArgumentTypes() {
+            return arguments;
+        }
+
+        public Optional<String> getReturnType() {
+            return returnType;
         }
 
         @Override
         public String toString() {
-            return types.toString();
+            return arguments.toString();
         }
     }
 }

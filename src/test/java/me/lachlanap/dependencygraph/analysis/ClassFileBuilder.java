@@ -2,23 +2,20 @@ package me.lachlanap.dependencygraph.analysis;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import me.lachlanap.dependencygraph.ClassFile;
-import me.lachlanap.dependencygraph.ClassFile.ConstructorTypes;
+import me.lachlanap.dependencygraph.ClassFile.Method;
 
 
 public class ClassFileBuilder {
 
     private final String name;
-    private String parent = "";
-    private final List<ClassFile.ConstructorTypes> constructors = new ArrayList<>();
+    private String parent = "test.Parent";
+    private final List<ClassFile.Method> constructors = new ArrayList<>();
+    private final List<ClassFile.Method> methods = new ArrayList<>();
 
     public ClassFileBuilder(String name) {
         this.name = name;
-    }
-
-    public ClassFileBuilder(String name, String parent) {
-        this.name = name;
-        this.parent = parent;
     }
 
     public ClassFileBuilder setParent(String parent) {
@@ -26,13 +23,18 @@ public class ClassFileBuilder {
         return this;
     }
 
-    public ClassFileBuilder appendConstructor(List<String> constructor) {
-        constructors.add(new ConstructorTypes(constructor));
+    public ClassFileBuilder appendConstructor(List<String> arguments) {
+        constructors.add(new Method("<init>", arguments));
+        return this;
+    }
+
+    public ClassFileBuilder appendMethod(String name, String returnValue, List<String> arguments) {
+        methods.add(new Method(name, arguments, Optional.of(returnValue)));
         return this;
     }
 
     public ClassFile build() {
-        return new ClassFile(name, parent, constructors);
+        return new ClassFile(name, parent, constructors, methods);
     }
 
 }

@@ -15,7 +15,7 @@ public abstract class AbstractIOLoader implements Loader {
         try {
             return readFromStream(openStream(path));
         } catch (IOException ioe) {
-            throw new LoadingFailedException("Could not read resource", ioe);
+            throw new LoadingFailedException("Could not read class " + path, ioe);
         }
     }
 

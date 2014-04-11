@@ -1,5 +1,6 @@
 package me.lachlanap.dependencygraph.io;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
@@ -62,6 +63,19 @@ public class JarLoader extends AbstractIOLoader {
 
     private String classToPath(String className) {
         return className.replaceAll("\\.", "/") + ".class";
+    }
+
+    @Override
+    protected byte[] readFromStream(InputStream stream) throws IOException {
+        try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+            byte[] buf = new byte[1024];
+            int read;
+
+            while ((read = stream.read(buf)) != -1)
+                bos.write(buf, 0, read);
+
+            return bos.toByteArray();
+        }
     }
 
     @Override

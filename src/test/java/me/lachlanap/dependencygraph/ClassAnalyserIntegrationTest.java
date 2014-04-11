@@ -13,7 +13,7 @@ public class ClassAnalyserIntegrationTest {
 
     @Test
     public void analysesSimpleExceptionClassCorrectly() {
-        String classResource = "/UserLostException.class";
+        String classResource = "UserLostException";
         Loader loader = new ResourceLoader();
         Parser parser = new Parser();
         ClassAnalyser analyser = new ClassAnalyser();
@@ -29,7 +29,7 @@ public class ClassAnalyserIntegrationTest {
 
     @Test
     public void analysesSimpleDataClassCorrectly() {
-        String classResource = "/Player.class";
+        String classResource = "Player";
         Loader loader = new ResourceLoader();
         Parser parser = new Parser();
         ClassAnalyser analyser = new ClassAnalyser();

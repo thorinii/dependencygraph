@@ -11,7 +11,7 @@ import java.io.InputStream;
 public class Helpers {
 
     public static byte[] loadClassFile(String resource) {
-        try (InputStream is = Helpers.class.getResourceAsStream(resource);
+        try (InputStream is = Helpers.class.getResourceAsStream("/" + resource + ".class");
              ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
             byte[] buf = new byte[1024];
             int read;

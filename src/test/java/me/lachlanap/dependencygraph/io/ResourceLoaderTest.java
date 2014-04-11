@@ -14,7 +14,7 @@ public class ResourceLoaderTest {
 
     @Test
     public void loadsCorrectContent() {
-        String resource = "/UserLostException.class";
+        String resource = "UserLostException";
         byte[] expected = loadClassFile(resource);
         Loader loader = new ResourceLoader();
 

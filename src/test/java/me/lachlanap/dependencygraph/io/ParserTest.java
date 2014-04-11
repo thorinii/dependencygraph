@@ -16,7 +16,7 @@ public class ParserTest {
 
     @Test
     public void parsesClassName() {
-        byte[] bytecode = loadClassFile("/UserLostException.class");
+        byte[] bytecode = loadClassFile("UserLostException");
         Parser parser = new Parser();
 
         ClassFile classFile = parser.parse(bytecode);
@@ -26,7 +26,7 @@ public class ParserTest {
 
     @Test
     public void parsesParent() {
-        byte[] bytecode = loadClassFile("/UserLostException.class");
+        byte[] bytecode = loadClassFile("UserLostException");
         Parser parser = new Parser();
 
         ClassFile classFile = parser.parse(bytecode);
@@ -36,7 +36,7 @@ public class ParserTest {
 
     @Test
     public void parsesBlankConstructor() {
-        byte[] bytecode = loadClassFile("/UserLostException.class");
+        byte[] bytecode = loadClassFile("UserLostException");
         Parser parser = new Parser();
 
         ClassFile classFile = parser.parse(bytecode);
@@ -46,7 +46,7 @@ public class ParserTest {
 
     @Test
     public void parsesParameterisedConstructor() {
-        byte[] bytecode = loadClassFile("/NameAlreadyTakenException.class");
+        byte[] bytecode = loadClassFile("NameAlreadyTakenException");
         Parser parser = new Parser();
 
         ClassFile classFile = parser.parse(bytecode);
@@ -56,7 +56,7 @@ public class ParserTest {
 
     @Test
     public void parsesParameterisedConstructorWithPrimitives() {
-        byte[] bytecode = loadClassFile("/Player.class");
+        byte[] bytecode = loadClassFile("Player");
         Parser parser = new Parser();
 
         ClassFile classFile = parser.parse(bytecode);
@@ -66,7 +66,7 @@ public class ParserTest {
 
     @Test
     public void parsesParameterisedMethod() {
-        byte[] bytecode = loadClassFile("/Player.class");
+        byte[] bytecode = loadClassFile("Player");
         Parser parser = new Parser();
 
         ClassFile classFile = parser.parse(bytecode);
@@ -76,7 +76,7 @@ public class ParserTest {
 
     @Test
     public void parsesMethodWithReturnType() {
-        byte[] bytecode = loadClassFile("/Player.class");
+        byte[] bytecode = loadClassFile("Player");
         Parser parser = new Parser();
 
         ClassFile classFile = parser.parse(bytecode);
@@ -86,7 +86,7 @@ public class ParserTest {
 
     @Test
     public void parsesCodeWithNew() {
-        byte[] bytecode = loadClassFile("/NameAlreadyTakenException.class");
+        byte[] bytecode = loadClassFile("NameAlreadyTakenException");
         Parser parser = new Parser();
 
         ClassFile classFile = parser.parse(bytecode);
@@ -96,7 +96,7 @@ public class ParserTest {
 
     @Test
     public void parsesCodeWithInvokeSpecial() {
-        byte[] bytecode = loadClassFile("/UserLostException.class");
+        byte[] bytecode = loadClassFile("UserLostException");
         Parser parser = new Parser();
 
         ClassFile classFile = parser.parse(bytecode);
@@ -106,7 +106,7 @@ public class ParserTest {
 
     @Test
     public void parsesField() {
-        byte[] bytecode = loadClassFile("/Player.class");
+        byte[] bytecode = loadClassFile("Player");
         Parser parser = new Parser();
 
         ClassFile classFile = parser.parse(bytecode);

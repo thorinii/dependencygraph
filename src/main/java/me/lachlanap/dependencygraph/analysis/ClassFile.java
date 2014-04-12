@@ -44,6 +44,10 @@ public class ClassFile {
         return parent;
     }
 
+    public String getPackage() {
+        return name.substring(0, name.lastIndexOf('.'));
+    }
+
     public List<Method> getConstructors() {
         return constructors;
     }

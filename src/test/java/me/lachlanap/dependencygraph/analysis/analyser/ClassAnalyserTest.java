@@ -1,8 +1,10 @@
-package me.lachlanap.dependencygraph.analysis;
+package me.lachlanap.dependencygraph.analysis.analyser;
 
 import me.lachlanap.dependencygraph.analysis.analyser.ClassAnalyser;
 import me.lachlanap.dependencygraph.analysis.analyser.ClassAnalysis;
 import java.util.Arrays;
+import me.lachlanap.dependencygraph.analysis.ClassFile;
+import me.lachlanap.dependencygraph.analysis.ClassFileBuilder;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.*;

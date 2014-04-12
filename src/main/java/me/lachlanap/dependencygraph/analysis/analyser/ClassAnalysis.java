@@ -25,6 +25,10 @@ public class ClassAnalysis {
         return classFile.getParent();
     }
 
+    public ClassFile getClassFile() {
+        return classFile;
+    }
+
     public Set<String> getDependencies() {
         return dependencies;
     }

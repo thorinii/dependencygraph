@@ -17,9 +17,11 @@ public class DiagramWriter {
         this.out = out;
     }
 
-    public void writeDiagram(String name, Diagram diagram) throws IOException {
+    public void writeDiagram(String name, Diagram diagram) throws DiagramWritingException {
         try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(out.resolve(name)))) {
             writer.println(diagram.buildDiagram());
+        } catch (IOException ioe) {
+            throw new DiagramWritingException("Failed to write diagram", ioe);
         }
     }
 }

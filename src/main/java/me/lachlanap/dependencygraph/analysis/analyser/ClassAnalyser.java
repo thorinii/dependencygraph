@@ -2,7 +2,7 @@ package me.lachlanap.dependencygraph.analysis.analyser;
 
 import java.util.HashSet;
 import java.util.Set;
-import me.lachlanap.dependencygraph.ClassFile;
+import me.lachlanap.dependencygraph.analysis.ClassFile;
 
 /**
  *
@@ -33,8 +33,6 @@ public class ClassAnalyser {
         if (dependencies.contains(classFile.getName()))
             dependencies.remove(classFile.getName());
 
-        return new ClassAnalysis(classFile.getName(),
-                                 classFile.getParent(),
-                                 dependencies);
+        return new ClassAnalysis(classFile, dependencies);
     }
 }

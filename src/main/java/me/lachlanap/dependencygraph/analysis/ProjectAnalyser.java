@@ -27,7 +27,7 @@ public class ProjectAnalyser {
         this.classAnalyser = classAnalyser;
     }
 
-    public List<ClassAnalysis> analyse() {
+    public ProjectAnalysis analyse() {
         List<ClassAnalysis> analysis = spider.findClassesToAnalyse().parallelStream()
                 .map(loader::load)
                 .map(parser::parse)
@@ -36,6 +36,6 @@ public class ProjectAnalyser {
 
         loader.close();
 
-        return analysis;
+        return new ProjectAnalysis(analysis);
     }
 }

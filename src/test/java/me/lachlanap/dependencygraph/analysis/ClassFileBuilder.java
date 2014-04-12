@@ -1,10 +1,9 @@
 package me.lachlanap.dependencygraph.analysis;
 
 import java.util.*;
-import me.lachlanap.dependencygraph.ClassFile;
-import me.lachlanap.dependencygraph.ClassFile.Code;
-import me.lachlanap.dependencygraph.ClassFile.Field;
-import me.lachlanap.dependencygraph.ClassFile.Method;
+import me.lachlanap.dependencygraph.analysis.ClassFile.Code;
+import me.lachlanap.dependencygraph.analysis.ClassFile.Field;
+import me.lachlanap.dependencygraph.analysis.ClassFile.Method;
 
 
 public class ClassFileBuilder {

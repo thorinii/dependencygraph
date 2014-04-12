@@ -2,7 +2,7 @@ package me.lachlanap.dependencygraph.analysis.io;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import me.lachlanap.dependencygraph.ClassFile;
+import me.lachlanap.dependencygraph.analysis.ClassFile;
 import org.objectweb.asm.*;
 
 /**

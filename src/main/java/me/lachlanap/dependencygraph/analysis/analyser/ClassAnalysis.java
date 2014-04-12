@@ -1,6 +1,7 @@
 package me.lachlanap.dependencygraph.analysis.analyser;
 
 import java.util.Set;
+import me.lachlanap.dependencygraph.analysis.ClassFile;
 
 /**
  *
@@ -8,22 +9,20 @@ import java.util.Set;
  */
 public class ClassAnalysis {
 
-    private final String name;
-    private final String parent;
+    private final ClassFile classFile;
     private final Set<String> dependencies;
 
-    public ClassAnalysis(String name, String parent, Set<String> dependencies) {
-        this.name = name;
-        this.parent = parent;
+    public ClassAnalysis(ClassFile classFile, Set<String> dependencies) {
+        this.classFile = classFile;
         this.dependencies = dependencies;
     }
 
     public String getName() {
-        return name;
+        return classFile.getName();
     }
 
     public String getParent() {
-        return parent;
+        return classFile.getParent();
     }
 
     public Set<String> getDependencies() {
@@ -32,8 +31,8 @@ public class ClassAnalysis {
 
     @Override
     public String toString() {
-        return "Analysis[" + name
-               + " (" + parent + ")"
+        return "Analysis[" + getName()
+               + " (" + getParent() + ")"
                + " -> " + dependencies
                + "]";
     }

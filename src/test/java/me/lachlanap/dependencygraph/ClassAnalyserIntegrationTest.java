@@ -1,5 +1,6 @@
 package me.lachlanap.dependencygraph;
 
+import me.lachlanap.dependencygraph.analysis.ClassFile;
 import me.lachlanap.dependencygraph.analysis.analyser.ClassAnalyser;
 import me.lachlanap.dependencygraph.analysis.analyser.ClassAnalysis;
 import me.lachlanap.dependencygraph.analysis.*;

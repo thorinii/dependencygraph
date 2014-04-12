@@ -1,4 +1,4 @@
-package me.lachlanap.dependencygraph;
+package me.lachlanap.dependencygraph.analysis;
 
 import java.util.List;
 import java.util.Optional;

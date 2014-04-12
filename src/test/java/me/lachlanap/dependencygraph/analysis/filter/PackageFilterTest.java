@@ -13,21 +13,28 @@ public class PackageFilterTest {
 
     @Test
     public void removesMatching() {
-        PackageFilter filter = new PackageFilter("java");
+        ExcludingPackageFilter filter = new ExcludingPackageFilter("java");
+
+        assertThat(filter.keepClass("java.lang.String"), is(false));
+    }
+
+    @Test
+    public void removesMatchingNestedPackage() {
+        ExcludingPackageFilter filter = new ExcludingPackageFilter("java.lang");
 
         assertThat(filter.keepClass("java.lang.String"), is(false));
     }
 
     @Test
     public void keepsNotMatching() {
-        PackageFilter filter = new PackageFilter("java");
+        ExcludingPackageFilter filter = new ExcludingPackageFilter("java");
 
         assertThat(filter.keepClass("com.apache.Class"), is(true));
     }
 
     @Test
     public void keepsNotMatchingWithSimilarName() {
-        PackageFilter filter = new PackageFilter("java");
+        ExcludingPackageFilter filter = new ExcludingPackageFilter("java");
 
         assertThat(filter.keepClass("javax.swing.JFrame"), is(true));
     }

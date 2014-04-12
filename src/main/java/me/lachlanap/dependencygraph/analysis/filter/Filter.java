@@ -11,4 +11,9 @@ public interface Filter {
     }
 
     public boolean keepPackage(String name);
+
+    public default Filter invert() {
+        Filter normal = this;
+        return name -> !normal.keepClass(name);
+    }
 }

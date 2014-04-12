@@ -1,4 +1,4 @@
-package me.lachlanap.dependencygraph.spider;
+package me.lachlanap.dependencygraph.analysis.spider;
 
 /**
  *

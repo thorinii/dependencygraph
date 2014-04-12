@@ -1,4 +1,4 @@
-package me.lachlanap.dependencygraph.io;
+package me.lachlanap.dependencygraph.analysis.io;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -19,38 +19,51 @@ public class JarLoader extends AbstractIOLoader {
     private final Map<String, byte[]> cache;
 
     private JarInputStream stream;
+    private boolean finishedReading;
 
     public JarLoader(URL url) {
         jarUrl = url;
         cache = new HashMap<>();
 
         stream = null;
+        finishedReading = false;
     }
 
     @Override
-    public byte[] load(String path) throws LoadingFailedException {
+    public byte[] safeLoad(String path) throws IOException, LoadingFailedException {
         if (cache.containsKey(path))
             return cache.get(path);
         else {
-            byte[] data = super.load(path);
+            byte[] data = readFromStream(openStreamTo(path));
             cache.put(path, data);
             return data;
         }
     }
 
-    @Override
-    protected InputStream openStream(String path) throws IOException {
-        if (stream == null)
-            setupStream();
+    private InputStream openStreamTo(String path) throws IOException {
+        if (finishedReading)
+            throw new LoaderCouldNotFindClassException(path);
+        else {
+            if (stream == null)
+                setupStream();
 
-        JarEntry entry;
+            JarEntry entry;
 
-        while ((entry = stream.getNextJarEntry()) != null) {
-            if (entry.getName().equals(classToPath(path)))
-                return stream;
+            while ((entry = stream.getNextJarEntry()) != null) {
+                String fileName = entry.getName();
+                if (isClass(fileName)) {
+                    String className = pathToClass(fileName);
+                    if (className.equals(path))
+                        return stream;
+                    else
+                        cache.put(className, readFromStream(stream));
+                }
+            }
+
+            finishedReading = true;
+
+            throw new LoaderCouldNotFindClassException(path);
         }
-
-        throw new LoaderCouldNotFindClassException(path);
     }
 
     private void setupStream() {
@@ -61,8 +74,13 @@ public class JarLoader extends AbstractIOLoader {
         }
     }
 
-    private String classToPath(String className) {
-        return className.replaceAll("\\.", "/") + ".class";
+    private boolean isClass(String fileName) {
+        return fileName.endsWith(".class");
+    }
+
+    private String pathToClass(String fileName) {
+        return fileName.substring(0, fileName.lastIndexOf(".class"))
+                .replaceAll("/", ".");
     }
 
     @Override
@@ -81,6 +99,7 @@ public class JarLoader extends AbstractIOLoader {
     @Override
     public void close() {
         try {
+            finishedReading = true;
             stream.close();
         } catch (IOException ex) {
             throw new RuntimeException("Could not close stream", ex);

@@ -1,4 +1,4 @@
-package me.lachlanap.dependencygraph.io;
+package me.lachlanap.dependencygraph.analysis.io;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -11,15 +11,15 @@ import java.io.InputStream;
 public abstract class AbstractIOLoader implements Loader {
 
     @Override
-    public byte[] load(String path) throws LoadingFailedException {
+    public final byte[] load(String path) throws LoadingFailedException {
         try {
-            return readFromStream(openStream(path));
+            return safeLoad(path);
         } catch (IOException ioe) {
             throw new LoadingFailedException("Could not read class " + path, ioe);
         }
     }
 
-    protected abstract InputStream openStream(String path) throws IOException;
+    protected abstract byte[] safeLoad(String path) throws LoadingFailedException, IOException;
 
     protected byte[] readFromStream(InputStream stream) throws IOException {
         try (InputStream is = stream;

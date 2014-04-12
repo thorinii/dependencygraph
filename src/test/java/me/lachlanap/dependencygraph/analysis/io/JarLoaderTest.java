@@ -1,6 +1,9 @@
-package me.lachlanap.dependencygraph.io;
+package me.lachlanap.dependencygraph.analysis.io;
 
 import me.lachlanap.dependencygraph.Helpers;
+import me.lachlanap.dependencygraph.analysis.io.JarLoader;
+import me.lachlanap.dependencygraph.analysis.io.Loader;
+import me.lachlanap.dependencygraph.analysis.io.LoaderCouldNotFindClassException;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
@@ -27,6 +30,26 @@ public class JarLoaderTest {
     public void findsClass() {
         Loader loader = new JarLoader(getClass().getResource("/small-jar.jar"));
 
+        loader.load("com.lachlan.jbox2dtests.App");
+
+        loader.close();
+    }
+
+    @Test
+    public void findsClassesForwards() {
+        Loader loader = new JarLoader(getClass().getResource("/small-jar.jar"));
+
+        loader.load("com.lachlan.jbox2dtests.App");
+        loader.load("com.lachlan.jbox2dtests.ATest");
+
+        loader.close();
+    }
+
+    @Test
+    public void findsClassesBackwards() {
+        Loader loader = new JarLoader(getClass().getResource("/small-jar.jar"));
+
+        loader.load("com.lachlan.jbox2dtests.ATest");
         loader.load("com.lachlan.jbox2dtests.App");
 
         loader.close();

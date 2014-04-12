@@ -1,4 +1,4 @@
-package me.lachlanap.dependencygraph.io;
+package me.lachlanap.dependencygraph.analysis.io;
 
 import java.util.*;
 import java.util.stream.Collectors;

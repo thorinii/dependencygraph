@@ -1,5 +1,6 @@
-package me.lachlanap.dependencygraph.io;
+package me.lachlanap.dependencygraph.analysis.io;
 
+import me.lachlanap.dependencygraph.analysis.io.Parser;
 import me.lachlanap.dependencygraph.ClassFile;
 import org.junit.Test;
 

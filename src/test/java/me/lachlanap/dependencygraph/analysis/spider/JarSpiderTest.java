@@ -1,5 +1,7 @@
-package me.lachlanap.dependencygraph.spider;
+package me.lachlanap.dependencygraph.analysis.spider;
 
+import me.lachlanap.dependencygraph.analysis.spider.JarSpider;
+import me.lachlanap.dependencygraph.analysis.spider.Spider;
 import java.util.List;
 import org.junit.Test;
 

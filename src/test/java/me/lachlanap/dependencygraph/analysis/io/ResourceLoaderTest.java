@@ -1,5 +1,7 @@
-package me.lachlanap.dependencygraph.io;
+package me.lachlanap.dependencygraph.analysis.io;
 
+import me.lachlanap.dependencygraph.analysis.io.Loader;
+import me.lachlanap.dependencygraph.analysis.io.ResourceLoader;
 import org.junit.Test;
 
 import static me.lachlanap.dependencygraph.Helpers.*;

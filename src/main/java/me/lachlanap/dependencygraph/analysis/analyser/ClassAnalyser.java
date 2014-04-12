@@ -1,4 +1,4 @@
-package me.lachlanap.dependencygraph.analysis;
+package me.lachlanap.dependencygraph.analysis.analyser;
 
 import java.util.HashSet;
 import java.util.Set;

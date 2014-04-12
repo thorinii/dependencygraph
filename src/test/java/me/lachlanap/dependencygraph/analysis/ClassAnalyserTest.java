@@ -1,5 +1,7 @@
 package me.lachlanap.dependencygraph.analysis;
 
+import me.lachlanap.dependencygraph.analysis.analyser.ClassAnalyser;
+import me.lachlanap.dependencygraph.analysis.analyser.ClassAnalysis;
 import java.util.Arrays;
 import me.lachlanap.dependencygraph.ClassFile;
 import org.junit.Test;

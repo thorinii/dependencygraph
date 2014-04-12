@@ -15,7 +15,12 @@ public class Parser {
         ClassReader reader = new ClassReader(bytecode);
 
         String className = internalToBinaryClassName(reader.getClassName());
-        String parentName = internalToBinaryClassName(reader.getSuperName());
+        String parentName;
+        if (reader.getSuperName() == null)
+            parentName = "java.lang.Object";
+        else
+            parentName = internalToBinaryClassName(reader.getSuperName());
+
         List<ClassFile.Method> constructors = new ArrayList<>();
         List<ClassFile.Method> methods = new ArrayList<>();
         List<ClassFile.Field> fields = new ArrayList<>();
@@ -29,12 +34,23 @@ public class Parser {
 
                     @Override
                     public void visitTypeInsn(int opcode, String type) {
-                        referencedInCode.add(internalToBinaryClassName(type));
+                        if (type.startsWith("[")) {
+                            Type t = Type.getType(type);
+                            if (t.getElementType().getSort() == Type.OBJECT)
+                                referencedInCode.add(t.getElementType().getClassName());
+                        } else
+                            referencedInCode.add(internalToBinaryClassName(type));
                     }
 
                     @Override
                     public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean itf) {
-                        referencedInCode.add(internalToBinaryClassName(owner));
+                        if (owner.startsWith("[")) {
+                            Type t = Type.getType(owner);
+                            if (t.getElementType().getSort() == Type.OBJECT)
+                                referencedInCode.add(t.getElementType().getClassName());
+                        } else
+                            referencedInCode.add(internalToBinaryClassName(owner));
+
                         getArgumentTypes(desc).forEach(referencedInCode::add);
                         getReturnType(desc).ifPresent(referencedInCode::add);
                     }
@@ -65,6 +81,8 @@ public class Parser {
     }
 
     private String internalToBinaryClassName(String internal) {
+        if (internal.startsWith("["))
+            throw new IllegalArgumentException("Does not deal with that sort of type: " + internal);
         return internal.replaceAll("/", ".");
     }
 

@@ -37,7 +37,11 @@ public class PackageAnalyser {
     }
 
     private String classToPackage(String c) {
-        return c.substring(0, c.lastIndexOf('.'));
+        try {
+            return c.substring(0, c.lastIndexOf('.'));
+        } catch (StringIndexOutOfBoundsException sioobe) {
+            throw new RuntimeException("'" + c + "' does not have a package", sioobe);
+        }
     }
 
     private Set<String> filterSelfDependency(String name, Set<String> dependencies) {

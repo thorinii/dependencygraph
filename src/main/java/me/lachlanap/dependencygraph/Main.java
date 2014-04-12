@@ -19,7 +19,7 @@ import me.lachlanap.dependencygraph.diagram.PackageDiagram;
 public class Main {
 
     public static void main(String[] args) {
-        URL path = Util.pathToUrl(Paths.get("small-jar.jar"));
+        URL path = Util.pathToUrl(Paths.get("medium-jar.jar"));
         Path out = Paths.get("out");
 
         ProjectAnalyser analyser = new ProjectAnalyser(
@@ -28,15 +28,24 @@ public class Main {
                 new Parser(),
                 new ClassAnalyser(),
                 new PackageAnalyser());
-        ProjectAnalysis analysis = analyser.analyse()
-                .keepOnly(new PackageFilter("java",
-                                            "javax"));
+
+        System.out.println("Analysing jar");
+        ProjectAnalysis analysis = analyser.analyse();
+
+        System.out.println("Filtering results");
+        analysis = analysis.keepOnly(new PackageFilter("java", "javax"));
+        //analysis = analysis.keepOnly(new PackageFilter("com", "sun", "sunw", "org"));
 
 
         Util.createBlankDirectory(out);
 
+        System.out.println("Generating diagrams");
         DiagramWriter writer = new DiagramWriter(out);
-        writer.writeDiagram("class.dot", new ClassDiagram(analysis));
+
+        System.out.println("Writing package diagram");
         writer.writeDiagram("package.dot", new PackageDiagram(analysis));
+
+        System.out.println("Writing class diagram");
+        writer.writeDiagram("class.dot", new ClassDiagram(analysis));
     }
 }

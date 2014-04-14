@@ -3,7 +3,8 @@ package me.lachlanap.dependencygraph.analysis.io;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.jar.JarEntry;
@@ -15,14 +16,14 @@ import java.util.jar.JarInputStream;
  */
 public class JarLoader extends AbstractIOLoader {
 
-    private final URL jarUrl;
+    private final Path jar;
     private final Map<String, byte[]> cache;
 
     private JarInputStream stream;
     private boolean finishedReading;
 
-    public JarLoader(URL url) {
-        jarUrl = url;
+    public JarLoader(Path jar) {
+        this.jar = jar;
         cache = new HashMap<>();
 
         stream = null;
@@ -68,9 +69,9 @@ public class JarLoader extends AbstractIOLoader {
 
     private void setupStream() {
         try {
-            stream = new JarInputStream(jarUrl.openStream());
+            stream = new JarInputStream(Files.newInputStream(jar));
         } catch (IOException ioe) {
-            throw new LoadingFailedException("Could not open jar " + jarUrl, ioe);
+            throw new LoadingFailedException("Could not open jar " + jar, ioe);
         }
     }
 

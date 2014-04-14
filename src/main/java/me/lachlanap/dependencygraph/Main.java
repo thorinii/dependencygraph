@@ -1,6 +1,5 @@
 package me.lachlanap.dependencygraph;
 
-import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import me.lachlanap.dependencygraph.analysis.ProjectAnalyser;
@@ -22,12 +21,11 @@ public class Main {
 
     public static void main(String[] args) {
         Path jarToAnalyse = Paths.get("eatit-android.jar");
-        URL path = Util.pathToUrl(Paths.get("eatit-android.jar"));
         Path out = Paths.get("out");
 
         ProjectAnalyser analyser = new ProjectAnalyser(
                 new JarSpider(jarToAnalyse),
-                new ThreadSafeLoader(new JarLoader(path)),
+                new ThreadSafeLoader(new JarLoader(jarToAnalyse)),
                 new Parser(),
                 new ClassAnalyser(),
                 new PackageAnalyser(),

@@ -1,13 +1,10 @@
 package me.lachlanap.dependencygraph.analysis.spider;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.jar.JarEntry;
-import java.util.jar.JarInputStream;
-import me.lachlanap.dependencygraph.Util;
+import me.lachlanap.dependencygraph.Helpers;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -36,26 +33,11 @@ public class DirectorySpiderTest {
 
     @Before
     public void extractJar() throws IOException {
-        Util.createBlankDirectory(directory);
-
-        try (JarInputStream stream = new JarInputStream(Files.newInputStream(source))) {
-            JarEntry entry;
-
-            while ((entry = stream.getNextJarEntry()) != null) {
-                String name = (entry.getName().startsWith("/")) ? entry.getName().substring(1) : entry.getName();
-
-                if (entry.isDirectory()) {
-                    Files.createDirectories(directory.resolve(name));
-                } else {
-                    Files.copy(stream, directory.resolve(name));
-                }
-            }
-        }
+        Helpers.extractJar(source, directory);
     }
 
     @After
     public void deleteExtracted() throws IOException {
-        Util.createBlankDirectory(directory);
-        Files.delete(directory);
+        Helpers.deleteExtracted(directory);
     }
 }

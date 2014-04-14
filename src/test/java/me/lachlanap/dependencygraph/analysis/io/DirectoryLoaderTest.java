@@ -1,21 +1,28 @@
 package me.lachlanap.dependencygraph.analysis.io;
 
+import java.io.IOException;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import me.lachlanap.dependencygraph.Helpers;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.is;
-import static org.junit.Assert.assertThat;
+import static org.junit.Assert.*;
 
 /**
  *
  * @author Lachlan Phillips
  */
-public class JarLoaderTest {
+public class DirectoryLoaderTest {
+
+    private static final Path source = Paths.get("small-jar.jar");
+    private static final Path directory = Paths.get("test-extracted");
 
     @Test(expected = LoaderCouldNotFindClassException.class)
     public void throwsNotFoundForInvalidClass() {
-        Loader loader = new JarLoader(Paths.get("small-jar.jar"));
+        Loader loader = new DirectoryLoader(directory);
 
         try {
             loader.load("NotPresent");
@@ -26,7 +33,7 @@ public class JarLoaderTest {
 
     @Test
     public void findsClass() {
-        Loader loader = new JarLoader(Paths.get("small-jar.jar"));
+        Loader loader = new DirectoryLoader(directory);
 
         loader.load("com.lachlan.jbox2dtests.App");
 
@@ -35,7 +42,7 @@ public class JarLoaderTest {
 
     @Test
     public void findsClassesForwards() {
-        Loader loader = new JarLoader(Paths.get("small-jar.jar"));
+        Loader loader = new DirectoryLoader(directory);
 
         loader.load("com.lachlan.jbox2dtests.App");
         loader.load("com.lachlan.jbox2dtests.ATest");
@@ -45,7 +52,7 @@ public class JarLoaderTest {
 
     @Test
     public void findsClassesBackwards() {
-        Loader loader = new JarLoader(Paths.get("small-jar.jar"));
+        Loader loader = new DirectoryLoader(directory);
 
         loader.load("com.lachlan.jbox2dtests.ATest");
         loader.load("com.lachlan.jbox2dtests.App");
@@ -55,7 +62,7 @@ public class JarLoaderTest {
 
     @Test
     public void loadsContentCorrectly() {
-        Loader loader = new JarLoader(Paths.get("small-jar.jar"));
+        Loader loader = new DirectoryLoader(directory);
         byte[] expected = Helpers.loadClassFile("App");
 
         byte[] actual = loader.load("com.lachlan.jbox2dtests.App");
@@ -64,4 +71,15 @@ public class JarLoaderTest {
 
         assertThat(actual, is(expected));
     }
+
+    @BeforeClass
+    public static void extractJar() throws IOException {
+        Helpers.extractJar(source, directory);
+    }
+
+    @AfterClass
+    public static void deleteExtracted() throws IOException {
+        Helpers.deleteExtracted(directory);
+    }
+
 }

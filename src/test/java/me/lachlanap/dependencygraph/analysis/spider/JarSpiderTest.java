@@ -1,7 +1,6 @@
 package me.lachlanap.dependencygraph.analysis.spider;
 
-import me.lachlanap.dependencygraph.analysis.spider.JarSpider;
-import me.lachlanap.dependencygraph.analysis.spider.Spider;
+import java.nio.file.Paths;
 import java.util.List;
 import org.junit.Test;
 
@@ -16,7 +15,7 @@ public class JarSpiderTest {
 
     @Test
     public void correctlyListsClasses() {
-        Spider spider = new JarSpider(getClass().getResource("/small-jar.jar"));
+        Spider spider = new JarSpider(Paths.get("small-jar.jar"));
 
         List<String> classes = spider.findClassesToAnalyse();
 

@@ -1,7 +1,8 @@
 package me.lachlanap.dependencygraph.analysis.spider;
 
 import java.io.IOException;
-import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.jar.JarEntry;
@@ -13,15 +14,15 @@ import java.util.jar.JarInputStream;
  */
 public class JarSpider implements Spider {
 
-    private final URL jarUrl;
+    private final Path jar;
 
-    public JarSpider(URL jarUrl) {
-        this.jarUrl = jarUrl;
+    public JarSpider(Path jar) {
+        this.jar = jar;
     }
 
     @Override
     public List<String> findClassesToAnalyse() throws SpiderException {
-        try (JarInputStream stream = new JarInputStream(jarUrl.openStream())) {
+        try (JarInputStream stream = new JarInputStream(Files.newInputStream(jar))) {
             JarEntry entry;
             List<String> classes = new ArrayList<>();
 
@@ -32,7 +33,7 @@ public class JarSpider implements Spider {
 
             return classes;
         } catch (IOException ioe) {
-            throw new SpiderException("Could not read jar " + jarUrl, ioe);
+            throw new SpiderException("Could not read jar " + jar, ioe);
         }
     }
 

@@ -21,11 +21,12 @@ import me.lachlanap.dependencygraph.diagram.PartitionedClassDiagram;
 public class Main {
 
     public static void main(String[] args) {
+        Path jarToAnalyse = Paths.get("eatit-android.jar");
         URL path = Util.pathToUrl(Paths.get("eatit-android.jar"));
         Path out = Paths.get("out");
 
         ProjectAnalyser analyser = new ProjectAnalyser(
-                new JarSpider(path),
+                new JarSpider(jarToAnalyse),
                 new ThreadSafeLoader(new JarLoader(path)),
                 new Parser(),
                 new ClassAnalyser(),

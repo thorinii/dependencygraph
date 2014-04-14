@@ -95,4 +95,39 @@ public class PackageAnalyserTest {
 
         assertThat(analysis, hasItems(that(p -> p.getDependencies(), hasOnly())));
     }
+
+    @Test
+    public void rootPackageForOnePackageIsItself() {
+        PackageAnalyser analyser = new PackageAnalyser();
+        List<PackageAnalysis> packages = Arrays.asList(
+                packageAnalysis("test.main"));
+
+        String root = analyser.findRootPackageFor(packages).get();
+
+        assertThat(root, is("test.main"));
+    }
+
+    @Test
+    public void rootPackageForTwoSiblingPackagesIsTheirParent() {
+        PackageAnalyser analyser = new PackageAnalyser();
+        List<PackageAnalysis> packages = Arrays.asList(
+                packageAnalysis("test.main.sub1"),
+                packageAnalysis("test.main.sub2"));
+
+        String root = analyser.findRootPackageFor(packages).get();
+
+        assertThat(root, is("test.main"));
+    }
+
+    @Test
+    public void rootPackageForTwoPackagesIsTheirIntersection() {
+        PackageAnalyser analyser = new PackageAnalyser();
+        List<PackageAnalysis> packages = Arrays.asList(
+                packageAnalysis("test.main"),
+                packageAnalysis("test.deeply.nested.sub.package"));
+
+        String root = analyser.findRootPackageFor(packages).get();
+
+        assertThat(root, is("test"));
+    }
 }

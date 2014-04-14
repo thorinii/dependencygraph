@@ -46,7 +46,8 @@ public class Util {
 
                 @Override
                 public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                    Files.delete(dir);
+                    if (!Files.isSameFile(dir, directory))
+                        Files.delete(dir);
                     return FileVisitResult.CONTINUE;
                 }
 

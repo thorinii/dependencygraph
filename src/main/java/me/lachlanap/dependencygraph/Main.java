@@ -7,7 +7,7 @@ import me.lachlanap.dependencygraph.analysis.ProjectAnalyser;
 import me.lachlanap.dependencygraph.analysis.ProjectAnalysis;
 import me.lachlanap.dependencygraph.analysis.analyser.ClassAnalyser;
 import me.lachlanap.dependencygraph.analysis.analyser.PackageAnalyser;
-import me.lachlanap.dependencygraph.analysis.filter.ExcludingPackageFilter;
+import me.lachlanap.dependencygraph.analysis.filter.IncludingPackageFilter;
 import me.lachlanap.dependencygraph.analysis.io.JarLoader;
 import me.lachlanap.dependencygraph.analysis.io.Parser;
 import me.lachlanap.dependencygraph.analysis.io.ThreadSafeLoader;
@@ -36,10 +36,9 @@ public class Main {
         ProjectAnalysis analysis = analyser.analyse();
 
         System.out.println("Filtering results");
-        //analysis = analysis.keepOnly(new PackageFilter("java", "javax"));
-        //analysis = analysis.keepOnly(new PackageFilter("com", "sun", "sunw", "org"));
+        analysis = analysis.keepOnly(new IncludingPackageFilter("java", "javax").invert());
+        //analysis = analysis.keepOnly(new ExcludingPackageFilter("com", "sun", "sunw", "org"));
         //analysis = analysis.keepOnly(new ExcludingPackageFilter("java", "javax.util", "android"));
-        analysis = analysis.keepOnly(new ExcludingPackageFilter("com.planticle").invert());
 
 
         Util.createBlankDirectory(out);
@@ -47,11 +46,15 @@ public class Main {
         System.out.println("Generating diagrams");
         DiagramWriter writer = new DiagramWriter(out);
 
-        System.out.println("Writing package diagram");
-        writer.writeDiagram("package.dot", new PackageDiagram(analysis));
+        writer.writeDiagram("packages.dot", new PackageDiagram(analysis));
+        writer.writeDiagram("classes.dot", new ClassDiagram(analysis));
+        writer.writeDiagram("classes-partitioned.dot", new PartitionedClassDiagram(analysis));
 
-        System.out.println("Writing class diagrams");
-        writer.writeDiagram("class.dot", new ClassDiagram(analysis));
-        writer.writeDiagram("class-partitioned.dot", new PartitionedClassDiagram(analysis));
+
+        analysis = analysis.keepOnlyProjectClasses();
+
+        writer.writeDiagram("project-packages.dot", new PackageDiagram(analysis));
+        writer.writeDiagram("project-classes.dot", new ClassDiagram(analysis));
+        writer.writeDiagram("project-classes-partitioned.dot", new PartitionedClassDiagram(analysis));
     }
 }

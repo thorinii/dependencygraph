@@ -1,8 +1,6 @@
 package me.lachlanap.dependencygraph.analysis.analyser;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -48,5 +46,26 @@ public class PackageAnalyser {
         return dependencies.stream()
                 .filter(p -> !p.equals(name))
                 .collect(Collectors.toSet());
+    }
+
+    public Optional<String> findRootPackageFor(List<PackageAnalysis> packagesAnalysis) {
+        return packagesAnalysis.stream()
+                .map((PackageAnalysis p) -> p.getName())
+                .map((String s) -> s.split("\\."))
+                .reduce(this::intersectionOf)
+                .map((String[] p) -> Arrays.stream(p).collect(Collectors.joining(".")));
+    }
+
+    private String[] intersectionOf(String[] p1, String[] p2) {
+        List<String> similarParts = new ArrayList<>();
+
+        for (int i = 0; i < p1.length && i < p2.length; i++) {
+            if (p1[i].equals(p2[i]))
+                similarParts.add(p1[i]);
+            else
+                return similarParts.toArray(new String[similarParts.size()]);
+        }
+
+        return similarParts.toArray(new String[similarParts.size()]);
     }
 }

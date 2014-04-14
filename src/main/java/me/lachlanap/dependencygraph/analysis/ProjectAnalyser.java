@@ -64,6 +64,9 @@ public class ProjectAnalyser {
 
         List<PackageAnalysis> packagesAnalysis = packageAnalyser.analyse(classesAnalysis);
 
-        return new ProjectAnalysis(classesAnalysis, packagesAnalysis);
+        String rootPackage = packageAnalyser.findRootPackageFor(packagesAnalysis).orElse("");
+
+        return new ProjectAnalysis(rootPackage,
+                                   classesAnalysis, packagesAnalysis);
     }
 }

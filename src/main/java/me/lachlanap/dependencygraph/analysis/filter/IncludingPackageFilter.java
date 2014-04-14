@@ -7,20 +7,16 @@ import java.util.List;
  *
  * @author Lachlan Phillips
  */
-public class ExcludingPackageFilter implements Filter {
+public class IncludingPackageFilter implements Filter {
 
     private final List<String> packages;
 
-    public ExcludingPackageFilter(String... packagesToRemove) {
-        this.packages = Arrays.asList(packagesToRemove);
+    public IncludingPackageFilter(String... packages) {
+        this.packages = Arrays.asList(packages);
     }
 
     @Override
     public boolean keepPackage(String name) {
-        return !packageShouldBeRemoved(name);
-    }
-
-    private boolean packageShouldBeRemoved(String name) {
         return packages.stream().anyMatch(p -> {
             if (name.length() < p.length())
                 return false;

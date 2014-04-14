@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 import me.lachlanap.dependencygraph.analysis.analyser.ClassAnalysis;
 import me.lachlanap.dependencygraph.analysis.analyser.PackageAnalysis;
 import me.lachlanap.dependencygraph.analysis.filter.Filter;
+import me.lachlanap.dependencygraph.analysis.filter.IncludingPackageFilter;
 
 /**
  *
@@ -12,13 +13,20 @@ import me.lachlanap.dependencygraph.analysis.filter.Filter;
  */
 public class ProjectAnalysis {
 
+    private final String rootPackage;
     private final List<ClassAnalysis> classesAnalysis;
     private final List<PackageAnalysis> packagesAnalysis;
 
-    public ProjectAnalysis(List<ClassAnalysis> classesAnalysis,
+    public ProjectAnalysis(String rootPackage,
+                           List<ClassAnalysis> classesAnalysis,
                            List<PackageAnalysis> packagesAnalysis) {
+        this.rootPackage = rootPackage;
         this.classesAnalysis = classesAnalysis;
         this.packagesAnalysis = packagesAnalysis;
+    }
+
+    public String getRootPackage() {
+        return rootPackage;
     }
 
     public List<ClassAnalysis> getClassAnalysis() {
@@ -27,6 +35,10 @@ public class ProjectAnalysis {
 
     public List<PackageAnalysis> getPackageAnalysis() {
         return packagesAnalysis;
+    }
+
+    public ProjectAnalysis keepOnlyProjectClasses() {
+        return keepOnly(new IncludingPackageFilter(rootPackage));
     }
 
     public ProjectAnalysis keepOnly(Filter filter) {
@@ -40,7 +52,7 @@ public class ProjectAnalysis {
                 .map(p -> filterPackageDependencies(filter, p))
                 .collect(Collectors.toList());
 
-        return new ProjectAnalysis(filteredClasses, filteredPackages);
+        return new ProjectAnalysis(rootPackage, filteredClasses, filteredPackages);
     }
 
     private ClassAnalysis filterClassDependencies(Filter filter, ClassAnalysis in) {

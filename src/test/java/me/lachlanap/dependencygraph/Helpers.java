@@ -8,6 +8,7 @@ import java.util.function.Function;
 import me.lachlanap.dependencygraph.analysis.ClassFileBuilder;
 import me.lachlanap.dependencygraph.analysis.ProjectAnalysis;
 import me.lachlanap.dependencygraph.analysis.analyser.ClassAnalysis;
+import me.lachlanap.dependencygraph.analysis.analyser.PackageAnalysis;
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
 import org.hamcrest.TypeSafeDiagnosingMatcher;
@@ -39,8 +40,12 @@ public class Helpers {
         return new ClassAnalysis(new ClassFileBuilder(name).build(), new HashSet<>(Arrays.asList(dependencies)));
     }
 
+    public static PackageAnalysis packageAnalysis(String name, String... dependencies) {
+        return new PackageAnalysis(name, new HashSet<>(Arrays.asList(dependencies)));
+    }
+
     public static ProjectAnalysis projectAnalysisOfClasses(ClassAnalysis... classes) {
-        return new ProjectAnalysis(Arrays.asList(classes), Collections.emptyList());
+        return new ProjectAnalysis("", Arrays.asList(classes), Collections.emptyList());
     }
 
     public static <T, V> Matcher<T> that(Function<T, V> lambda, Matcher<V> matcher) {

@@ -1,59 +1,22 @@
 package me.lachlanap.dependencygraph;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import me.lachlanap.dependencygraph.analysis.ProjectAnalyser;
-import me.lachlanap.dependencygraph.analysis.ProjectAnalysis;
-import me.lachlanap.dependencygraph.analysis.analyser.ClassAnalyser;
-import me.lachlanap.dependencygraph.analysis.analyser.PackageAnalyser;
-import me.lachlanap.dependencygraph.analysis.filter.IncludingPackageFilter;
-import me.lachlanap.dependencygraph.analysis.io.JarLoader;
-import me.lachlanap.dependencygraph.analysis.io.Parser;
-import me.lachlanap.dependencygraph.analysis.io.ThreadSafeLoader;
-import me.lachlanap.dependencygraph.analysis.rewrite.InnerClassRewriter;
-import me.lachlanap.dependencygraph.analysis.spider.JarSpider;
-import me.lachlanap.dependencygraph.diagram.ClassDiagram;
-import me.lachlanap.dependencygraph.diagram.DiagramWriter;
-import me.lachlanap.dependencygraph.diagram.PackageDiagram;
-import me.lachlanap.dependencygraph.diagram.PartitionedClassDiagram;
+import java.util.Arrays;
 
 public class Main {
 
     public static void main(String[] args) {
-        Path jarToAnalyse = Paths.get("eatit-android.jar");
-        Path out = Paths.get("out");
+        if (args.length < 2) {
+            System.out.println("Usage:\n"
+                               + "java -cp ... "
+                               + Main.class.getName() + " "
+                               + "<output directory> <directory or jar> [<directory or jar>...]");
+        } else {
+            DependencyAnalyserConfig config = new DependencyAnalyserConfig();
+            config.setOutputPath(args[0]);
 
-        ProjectAnalyser analyser = new ProjectAnalyser(
-                new JarSpider(jarToAnalyse),
-                new ThreadSafeLoader(new JarLoader(jarToAnalyse)),
-                new Parser(),
-                new ClassAnalyser(),
-                new PackageAnalyser(),
-                new InnerClassRewriter());
+            Arrays.stream(args).skip(1).forEachOrdered(config::addToAnalyse);
 
-        System.out.println("Analysing jar");
-        ProjectAnalysis analysis = analyser.analyse();
-
-        System.out.println("Filtering results");
-        analysis = analysis.keepOnly(new IncludingPackageFilter("java", "javax").invert());
-        //analysis = analysis.keepOnly(new ExcludingPackageFilter("com", "sun", "sunw", "org"));
-        //analysis = analysis.keepOnly(new ExcludingPackageFilter("java", "javax.util", "android"));
-
-
-        Util.createBlankDirectory(out);
-
-        System.out.println("Generating diagrams");
-        DiagramWriter writer = new DiagramWriter(out);
-
-        writer.writeDiagram("packages.dot", new PackageDiagram(analysis));
-        writer.writeDiagram("classes.dot", new ClassDiagram(analysis));
-        writer.writeDiagram("classes-partitioned.dot", new PartitionedClassDiagram(analysis));
-
-
-        analysis = analysis.keepOnlyProjectClasses();
-
-        writer.writeDiagram("project-packages.dot", new PackageDiagram(analysis));
-        writer.writeDiagram("project-classes.dot", new ClassDiagram(analysis));
-        writer.writeDiagram("project-classes-partitioned.dot", new PartitionedClassDiagram(analysis));
+            new DependencyAnalyser(config).analyse();
+        }
     }
 }

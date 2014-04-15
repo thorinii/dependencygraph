@@ -9,7 +9,7 @@ import java.nio.file.Path;
  *
  * @author Lachlan Phillips
  */
-public class DirectoryLoader extends AbstractIOLoader {
+public class DirectoryLoader extends AbstractIOLoader implements ThreadSafeLoader {
 
     private final Path directory;
 

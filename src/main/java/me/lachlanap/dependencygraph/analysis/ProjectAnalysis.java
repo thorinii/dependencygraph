@@ -55,6 +55,18 @@ public class ProjectAnalysis {
         return new ProjectAnalysis(rootPackage, filteredClasses, filteredPackages);
     }
 
+    public ProjectAnalysis keepOnlyAnalysisMatching(Filter filter) {
+        List<ClassAnalysis> filteredClasses = classesAnalysis.stream()
+                .filter(c -> filter.keepClass(c.getName()))
+                .collect(Collectors.toList());
+
+        List<PackageAnalysis> filteredPackages = packagesAnalysis.stream()
+                .filter(p -> filter.keepPackage(p.getName()))
+                .collect(Collectors.toList());
+
+        return new ProjectAnalysis(rootPackage, filteredClasses, filteredPackages);
+    }
+
     private ClassAnalysis filterClassDependencies(Filter filter, ClassAnalysis in) {
         return new ClassAnalysis(in.getClassFile(),
                                  in.getDependencies().stream()

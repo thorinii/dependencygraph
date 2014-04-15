@@ -15,6 +15,8 @@ public class ClassAnalyser {
 
         dependencies.add(classFile.getParent());
 
+        classFile.getInterfaces().forEach(dependencies::add);
+
         classFile.getConstructors().forEach(c -> {
             dependencies.addAll(c.getArgumentTypes());
             dependencies.addAll(c.getCode().getReferencedTypes());
@@ -22,6 +24,7 @@ public class ClassAnalyser {
 
         classFile.getMethods().forEach(m -> {
             dependencies.addAll(m.getArgumentTypes());
+            dependencies.addAll(m.getExceptions());
             dependencies.addAll(m.getCode().getReferencedTypes());
             m.getReturnType().ifPresent(t -> dependencies.add(t));
         });

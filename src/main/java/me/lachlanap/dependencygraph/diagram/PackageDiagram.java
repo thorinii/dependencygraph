@@ -43,14 +43,14 @@ public class PackageDiagram implements Diagram {
         return builder;
     }
 
-    private StringBuilder writeDependency(StringBuilder builder, PackageAnalysis analysis, String dependency) {
-        return builder.append(buildPackageName(analysis.getName()))
-                .append(" -> ")
-                .append(buildPackageName(dependency))
-                .append(';').append('\n');
+    private void writeDependency(StringBuilder builder, PackageAnalysis analysis, String dependency) {
+        buildPackageName(builder, analysis.getName());
+        builder.append(" -> ");
+        buildPackageName(builder, dependency);
+        builder.append(";\n");
     }
 
-    private String buildPackageName(String name) {
-        return '"' + name + '"';
+    private void buildPackageName(StringBuilder builder, String name) {
+        builder.append('"').append(name).append('"');
     }
 }

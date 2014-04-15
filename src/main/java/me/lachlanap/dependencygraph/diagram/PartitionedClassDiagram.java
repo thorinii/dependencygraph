@@ -48,10 +48,13 @@ public class PartitionedClassDiagram implements Diagram {
                 .collect(Collectors.groupingBy(c -> c.substring(0, c.lastIndexOf("."))))
                 .entrySet().forEach(e -> {
                     builder.append("subgraph \"cluster_").append(e.getKey()).append("\" {\n");
-                    builder.append("label=").append(buildClassName(e.getKey())).append(";\n");
+                    builder.append("label=");
+                    buildClassName(builder, e.getKey());
+                    builder.append(";\n");
 
                     e.getValue().stream().forEach(c -> {
-                        builder.append(buildLabeledClassName(c)).append(";\n");
+                        buildLabeledClassName(builder, c);
+                        builder.append(";\n");
                     });
 
                     builder.append("}\n");
@@ -68,18 +71,21 @@ public class PartitionedClassDiagram implements Diagram {
         return builder;
     }
 
-    private StringBuilder writeDependency(StringBuilder builder, ClassAnalysis analysis, String dependency) {
-        return builder.append(buildClassName(analysis.getName()))
-                .append(" -> ")
-                .append(buildClassName(dependency))
-                .append(';').append('\n');
+    private void writeDependency(StringBuilder builder, ClassAnalysis analysis, String dependency) {
+        buildClassName(builder, analysis.getName());
+        builder.append(" -> ");
+        buildClassName(builder, dependency);
+        builder.append(";\n");
     }
 
-    private String buildLabeledClassName(String name) {
-        return buildClassName(name) + " [label=" + buildClassName(name.substring(name.lastIndexOf('.') + 1)) + "]";
+    private void buildLabeledClassName(StringBuilder builder, String name) {
+        buildClassName(builder, name);
+        builder.append(" [label=");
+        buildClassName(builder, name.substring(name.lastIndexOf('.') + 1));
+        builder.append(']');
     }
 
-    private String buildClassName(String name) {
-        return '"' + name + '"';
+    private void buildClassName(StringBuilder builder, String name) {
+        builder.append('"').append(name).append('"');
     }
 }

@@ -12,11 +12,13 @@ public class ClassFile {
 
     private final String name;
     private final String parent;
+    private final List<String> interfaces;
     private final List<Method> constructors;
     private final List<Method> methods;
     private final List<Field> fields;
 
     public ClassFile(String name, String parent,
+                     List<String> interfaces,
                      List<Method> constructors,
                      List<Method> methods,
                      List<Field> fields) {
@@ -31,6 +33,7 @@ public class ClassFile {
 
         this.name = name;
         this.parent = parent;
+        this.interfaces = interfaces;
         this.constructors = constructors;
         this.methods = methods;
         this.fields = fields;
@@ -46,6 +49,10 @@ public class ClassFile {
 
     public String getPackage() {
         return name.substring(0, name.lastIndexOf('.'));
+    }
+
+    public List<String> getInterfaces() {
+        return interfaces;
     }
 
     public List<Method> getConstructors() {
@@ -78,13 +85,14 @@ public class ClassFile {
         private final String name;
         private final List<String> arguments;
         private final Optional<String> returnType;
+        private final List<String> exceptions;
         private final Code code;
 
-        public Method(String name, List<String> arguments, Code code) {
-            this(name, arguments, Optional.empty(), code);
+        public Method(String name, List<String> arguments, Code code, List<String> exceptions) {
+            this(name, arguments, Optional.empty(), code, exceptions);
         }
 
-        public Method(String name, List<String> arguments, Optional<String> returnType, Code code) {
+        public Method(String name, List<String> arguments, Optional<String> returnType, Code code, List<String> exceptions) {
             if (name.equals("<init>") && returnType.isPresent())
                 throw new IllegalArgumentException("Constructor does not return a type");
 
@@ -92,6 +100,7 @@ public class ClassFile {
             this.arguments = arguments;
             this.returnType = returnType;
             this.code = code;
+            this.exceptions = exceptions;
         }
 
         public boolean isConstructor() {
@@ -108,6 +117,10 @@ public class ClassFile {
 
         public Optional<String> getReturnType() {
             return returnType;
+        }
+
+        public List<String> getExceptions() {
+            return exceptions;
         }
 
         public Code getCode() {

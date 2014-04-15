@@ -24,7 +24,7 @@ public class ClassFileBuilder {
     }
 
     public ClassFileBuilder appendConstructor(List<String> arguments) {
-        constructors.add(new Method("<init>", arguments, nullCode()));
+        constructors.add(new Method("<init>", arguments, nullCode(), Arrays.asList()));
         return this;
     }
 
@@ -35,7 +35,7 @@ public class ClassFileBuilder {
     public ClassFileBuilder appendConstructorWithCode(Set<String> codeReferences) {
         constructors.add(new Method("<init>",
                                     Collections.emptyList(),
-                                    new Code(codeReferences)));
+                                    new Code(codeReferences), Arrays.asList()));
         return this;
     }
 
@@ -43,7 +43,7 @@ public class ClassFileBuilder {
         methods.add(new Method(name,
                                Collections.emptyList(),
                                Optional.empty(),
-                               nullCode()));
+                               nullCode(), Arrays.asList()));
         return this;
     }
 
@@ -51,7 +51,7 @@ public class ClassFileBuilder {
         methods.add(new Method(name,
                                arguments,
                                Optional.empty(),
-                               nullCode()));
+                               nullCode(), Arrays.asList()));
         return this;
     }
 
@@ -59,7 +59,7 @@ public class ClassFileBuilder {
         methods.add(new Method(name,
                                arguments,
                                Optional.of(returnValue),
-                               nullCode()));
+                               nullCode(), Arrays.asList()));
         return this;
     }
 
@@ -71,7 +71,7 @@ public class ClassFileBuilder {
         methods.add(new Method(name,
                                Collections.emptyList(),
                                Optional.empty(),
-                               new Code(codeReferences)));
+                               new Code(codeReferences), Arrays.asList()));
         return this;
     }
 
@@ -85,7 +85,7 @@ public class ClassFileBuilder {
     }
 
     public ClassFile build() {
-        return new ClassFile(name, parent, constructors, methods, fields);
+        return new ClassFile(name, parent, Collections.emptyList(), constructors, methods, fields);
     }
 
 }

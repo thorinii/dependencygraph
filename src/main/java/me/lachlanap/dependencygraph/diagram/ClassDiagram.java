@@ -23,7 +23,7 @@ public class ClassDiagram implements Diagram {
 
     @Override
     public String buildDiagram() {
-        StringBuilder builder = new StringBuilder();
+        StringBuilder builder = new StringBuilder(4096);
         builder.append("digraph {\n");
 
         writeDependencyList(builder);
@@ -33,23 +33,22 @@ public class ClassDiagram implements Diagram {
         return builder.toString();
     }
 
-    private StringBuilder writeDependencyList(StringBuilder builder) {
+    private void writeDependencyList(StringBuilder builder) {
         analysis.forEach(a -> {
             a.getDependencies().forEach(d -> {
                 writeDependency(builder, a, d);
             });
         });
-        return builder;
     }
 
-    private StringBuilder writeDependency(StringBuilder builder, ClassAnalysis analysis, String dependency) {
-        return builder.append(buildClassName(analysis.getName()))
-                .append(" -> ")
-                .append(buildClassName(dependency))
-                .append(';').append('\n');
+    private void writeDependency(StringBuilder builder, ClassAnalysis analysis, String dependency) {
+        buildClassName(builder, analysis.getName());
+        builder.append(" -> ");
+        buildClassName(builder, dependency);
+        builder.append(";\n");
     }
 
-    private String buildClassName(String name) {
-        return '"' + name + '"';
+    private void buildClassName(StringBuilder builder, String name) {
+        builder.append('"').append(name).append('"');
     }
 }

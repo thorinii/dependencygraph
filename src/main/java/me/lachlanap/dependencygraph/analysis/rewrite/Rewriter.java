@@ -23,6 +23,7 @@ public interface Rewriter {
     public default ClassFile rewriteClassFile(ClassFile in) {
         return new ClassFile(rewriteClassName(in.getName()),
                              in.getParent(),
+                             in.getInterfaces(),
                              in.getConstructors(),
                              in.getMethods(),
                              in.getFields());

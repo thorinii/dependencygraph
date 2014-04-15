@@ -10,6 +10,13 @@ public class Main {
                                + "java -cp ... "
                                + Main.class.getName() + " "
                                + "<output directory> <directory or jar> [<directory or jar>...]");
+            DependencyAnalyserConfig config = new DependencyAnalyserConfig();
+            config.setOutputPath("out");
+            config.addToAnalyse("massive-jar.jar");
+            config.setRootProjectPackage("java");
+            config.filterCoreJava = false;
+
+            new DependencyAnalyser(config).analyse();
         } else {
             DependencyAnalyserConfig config = new DependencyAnalyserConfig();
             config.setOutputPath(args[0]);

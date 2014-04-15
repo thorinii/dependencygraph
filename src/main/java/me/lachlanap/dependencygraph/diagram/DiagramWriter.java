@@ -1,7 +1,8 @@
 package me.lachlanap.dependencygraph.diagram;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -18,10 +19,17 @@ public class DiagramWriter {
     }
 
     public void writeDiagram(String name, Diagram diagram) throws DiagramWritingException {
-        try (PrintWriter writer = new PrintWriter(Files.newBufferedWriter(out.resolve(name)))) {
-            writer.println(diagram.buildDiagram());
+        String result = generateDiagram(diagram);
+
+        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(Files.newOutputStream(out.resolve(name))),
+                                                        result.length())) {
+            writer.write(result, 0, result.length());
         } catch (IOException ioe) {
             throw new DiagramWritingException("Failed to write diagram", ioe);
         }
+    }
+
+    private String generateDiagram(Diagram diagram) {
+        return diagram.buildDiagram();
     }
 }

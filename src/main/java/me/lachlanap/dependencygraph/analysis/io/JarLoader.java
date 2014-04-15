@@ -14,7 +14,7 @@ import java.util.jar.JarInputStream;
  *
  * @author Lachlan Phillips
  */
-public class JarLoader extends AbstractIOLoader {
+public class JarLoader extends AbstractIOLoader implements ThreadSafeLoader {
 
     private final Path jar;
     private final Map<String, byte[]> cache;
@@ -30,41 +30,43 @@ public class JarLoader extends AbstractIOLoader {
         finishedReading = false;
     }
 
+    public void init() throws LoadingFailedException {
+        try {
+            readAll();
+        } catch (IOException ioe) {
+            throw new LoadingFailedException("Failed to read from jar", ioe);
+        }
+    }
+
     @Override
     public byte[] safeLoad(String path) throws IOException, LoadingFailedException {
         if (cache.containsKey(path))
             return cache.get(path);
         else {
-            byte[] data = readFromStream(openStreamTo(path));
-            cache.put(path, data);
-            return data;
+            if (!finishedReading)
+                readAll();
+
+            if (cache.containsKey(path))
+                return cache.get(path);
+            else
+                throw new LoaderCouldNotFindClassException(path);
         }
     }
 
-    private InputStream openStreamTo(String path) throws IOException {
-        if (finishedReading)
-            throw new LoaderCouldNotFindClassException(path);
-        else {
-            if (stream == null)
-                setupStream();
+    private void readAll() throws IOException {
+        setupStream();
 
-            JarEntry entry;
+        JarEntry entry;
 
-            while ((entry = stream.getNextJarEntry()) != null) {
-                String fileName = entry.getName();
-                if (isClass(fileName)) {
-                    String className = pathToClass(fileName);
-                    if (className.equals(path))
-                        return stream;
-                    else
-                        cache.put(className, readFromStream(stream));
-                }
+        while ((entry = stream.getNextJarEntry()) != null) {
+            String fileName = entry.getName();
+            if (isClass(fileName)) {
+                String className = pathToClass(fileName);
+                cache.put(className, readFromStream(stream));
             }
-
-            finishedReading = true;
-
-            throw new LoaderCouldNotFindClassException(path);
         }
+
+        finishedReading = true;
     }
 
     private void setupStream() {

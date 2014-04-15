@@ -8,11 +8,11 @@ import java.util.function.Function;
  *
  * @author Lachlan Phillips
  */
-public class CompositeLoader implements Loader {
+public class CompositeLoader implements ThreadSafeLoader {
 
-    private final List<Loader> loaders;
+    private final List<ThreadSafeLoader> loaders;
 
-    public CompositeLoader(List<Loader> loaders) {
+    public CompositeLoader(List<ThreadSafeLoader> loaders) {
         if (loaders.isEmpty())
             throw new IllegalArgumentException("Must have at least one loader");
         this.loaders = loaders;

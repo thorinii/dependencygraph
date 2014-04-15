@@ -3,6 +3,7 @@ package me.lachlanap.dependencygraph;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import me.lachlanap.dependencygraph.analysis.ProjectAnalyser;
 import me.lachlanap.dependencygraph.analysis.ProjectAnalysis;
@@ -30,31 +31,33 @@ public class DependencyAnalyser {
     }
 
     public void analyse() {
-        ProjectAnalyser analyser = buildAnalyser(config.toAnalyse);
+        System.out.println("Initialising");
+        ProjectAnalyser analyser = buildAnalyser(config.toAnalyse, config.rootProjectPackage);
 
-        System.out.println("Analysing jar");
+        System.out.println("Analysing project");
         ProjectAnalysis analysis = analyser.analyse();
 
-        System.out.println("Filtering results");
-        analysis = analysis.keepOnly(new IncludingPackageFilter("java", "javax").invert());
+        if (config.filterCoreJava)
+            analysis = analysis.keepOnly(new IncludingPackageFilter("java", "javax").invert());
 
         System.out.println("Generating diagrams");
         generateDiagrams(config.outputPath, analysis);
     }
 
-    private ProjectAnalyser buildAnalyser(List<Path> toAnalyse) {
+    private ProjectAnalyser buildAnalyser(List<Path> toAnalyse, Optional<String> rootPackageOverride) {
         Spider spider = new CompositeSpider(
                 toAnalyse.stream().map(this::spiderFor).collect(Collectors.toList()));
-        Loader loader = new CompositeLoader(
+        ThreadSafeLoader loader = new CompositeLoader(
                 toAnalyse.stream().map(this::loaderFor).collect(Collectors.toList()));
 
         ProjectAnalyser analyser = new ProjectAnalyser(
                 spider,
-                new ThreadSafeLoader(loader),
+                loader,
                 new Parser(),
                 new ClassAnalyser(),
                 new PackageAnalyser(),
-                new InnerClassRewriter());
+                new InnerClassRewriter(),
+                rootPackageOverride);
         return analyser;
     }
 
@@ -67,12 +70,14 @@ public class DependencyAnalyser {
             throw new UnsupportedOperationException("Don't know how to read " + toAnalyse);
     }
 
-    private Loader loaderFor(Path toAnalyse) {
+    private ThreadSafeLoader loaderFor(Path toAnalyse) {
         if (Files.isDirectory(toAnalyse))
             return new DirectoryLoader(toAnalyse);
-        else if (toAnalyse.toString().toLowerCase().endsWith(".jar"))
-            return new JarLoader(toAnalyse);
-        else
+        else if (toAnalyse.toString().toLowerCase().endsWith(".jar")) {
+            JarLoader loader = new JarLoader(toAnalyse);
+            loader.init();
+            return loader;
+        } else
             throw new UnsupportedOperationException("Don't know how to read " + toAnalyse);
     }
 
@@ -86,10 +91,17 @@ public class DependencyAnalyser {
         writer.writeDiagram("classes-partitioned.dot", new PartitionedClassDiagram(analysis));
 
 
-        analysis = analysis.keepOnlyProjectClasses();
+        ProjectAnalysis projectClasses = analysis.keepOnlyProjectClasses();
 
-        writer.writeDiagram("project-packages.dot", new PackageDiagram(analysis));
-        writer.writeDiagram("project-classes.dot", new ClassDiagram(analysis));
-        writer.writeDiagram("project-classes-partitioned.dot", new PartitionedClassDiagram(analysis));
+        writer.writeDiagram("project-packages.dot", new PackageDiagram(projectClasses));
+        writer.writeDiagram("project-classes.dot", new ClassDiagram(projectClasses));
+        writer.writeDiagram("project-classes-partitioned.dot", new PartitionedClassDiagram(projectClasses));
+
+        projectClasses.getPackageAnalysis().parallelStream().forEach(pack -> {
+            ProjectAnalysis filteredByPackage = analysis.keepOnlyAnalysisMatching(p -> p.equals(pack.getName()));
+
+            writer.writeDiagram("project-classes-partitioned-" + pack.getName() + ".dot",
+                                new PartitionedClassDiagram(filteredByPackage));
+        });
     }
 }

@@ -38,7 +38,6 @@ public class JarSpider implements Spider {
     }
 
     private String fileToClassName(String name) {
-        return name.substring(0, name.lastIndexOf(".class"))
-                .replaceAll("/", ".");
+        return name.substring(0, name.length() - 6).replaceAll("/", ".");
     }
 }

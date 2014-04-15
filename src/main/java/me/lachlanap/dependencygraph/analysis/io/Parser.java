@@ -20,6 +20,7 @@ public class Parser {
             parentName = "java.lang.Object";
         else
             parentName = internalToBinaryClassName(reader.getSuperName());
+        List<String> interfaces = getTypes(Arrays.asList(reader.getInterfaces()));
 
         List<ClassFile.Method> constructors = new ArrayList<>();
         List<ClassFile.Method> methods = new ArrayList<>();
@@ -57,10 +58,21 @@ public class Parser {
 
                     @Override
                     public void visitEnd() {
+                        List<String> exceptionTypes;
+                        if (exceptions == null)
+                            exceptionTypes = Collections.emptyList();
+                        else
+                            exceptionTypes = Arrays.asList(exceptions);
+
                         if (isConstructor(name)) {
-                            constructors.add(makeConstructor(desc, makeCode(referencedInCode)));
+                            constructors.add(makeConstructor(desc,
+                                                             makeCode(referencedInCode),
+                                                             exceptionTypes));
                         } else {
-                            methods.add(makeMethod(name, desc, makeCode(referencedInCode)));
+                            methods.add(makeMethod(name,
+                                                   desc,
+                                                   makeCode(referencedInCode),
+                                                   exceptionTypes));
                         }
                     }
                 };
@@ -77,11 +89,11 @@ public class Parser {
             }
         }, ClassReader.SKIP_FRAMES | ClassReader.SKIP_DEBUG);
 
-        return new ClassFile(className, parentName, constructors, methods, fields);
+        return new ClassFile(className, parentName, interfaces, constructors, methods, fields);
     }
 
     private String internalToBinaryClassName(String internal) {
-        if (internal.startsWith("["))
+        if (internal.charAt(0) == '[')
             throw new IllegalArgumentException("Does not deal with that sort of type: " + internal);
         return internal.replaceAll("/", ".");
     }
@@ -90,17 +102,25 @@ public class Parser {
         return methodName.equals("<init>");
     }
 
-    private ClassFile.Method makeConstructor(String descriptor, ClassFile.Code code) {
-        return new ClassFile.Method("<init>", getArgumentTypes(descriptor), code);
+    private ClassFile.Method makeConstructor(String descriptor, ClassFile.Code code, List<String> exceptions) {
+        return new ClassFile.Method("<init>", getArgumentTypes(descriptor), code, getTypes(exceptions));
     }
 
-    private ClassFile.Method makeMethod(String name, String descriptor, ClassFile.Code code) {
-        return new ClassFile.Method(name, getArgumentTypes(descriptor), getReturnType(descriptor), code);
+    private ClassFile.Method makeMethod(String name, String descriptor, ClassFile.Code code, List<String> exceptions) {
+        return new ClassFile.Method(name, getArgumentTypes(descriptor), getReturnType(descriptor), code, getTypes(exceptions));
     }
 
     private List<String> getArgumentTypes(String descriptor) {
         return Arrays.asList(Type.getArgumentTypes(descriptor)).stream()
                 .filter(t -> isObject(t))
+                .map(t -> t.getInternalName())
+                .map(n -> internalToBinaryClassName(n))
+                .collect(Collectors.toList());
+    }
+
+    private List<String> getTypes(List<String> exceptions) {
+        return exceptions.stream()
+                .map(e -> Type.getObjectType(e))
                 .map(t -> t.getInternalName())
                 .map(n -> internalToBinaryClassName(n))
                 .collect(Collectors.toList());

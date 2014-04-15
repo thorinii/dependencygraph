@@ -8,10 +8,10 @@ public class InnerClassRewriter implements Rewriter {
 
     @Override
     public String rewriteClassName(String name) {
-        if (name.contains("$"))
-            return name.substring(0, name.indexOf('$'));
-        else
-            return name;
+        int indexOf$ = name.indexOf('$');
+        return indexOf$ > 0
+               ? name.substring(0, indexOf$)
+               : name;
     }
 
 }

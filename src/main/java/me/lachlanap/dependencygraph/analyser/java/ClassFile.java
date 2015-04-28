@@ -5,7 +5,6 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- *
  * @author Lachlan Phillips
  */
 public class ClassFile {
@@ -16,12 +15,14 @@ public class ClassFile {
     private final List<Method> constructors;
     private final List<Method> methods;
     private final List<Field> fields;
+    private final boolean isPrivate;
 
     public ClassFile(String name, String parent,
                      List<String> interfaces,
                      List<Method> constructors,
                      List<Method> methods,
-                     List<Field> fields) {
+                     List<Field> fields,
+                     boolean isPrivate) {
         constructors.forEach(c -> {
             if (!c.isConstructor())
                 throw new IllegalArgumentException("Constructors must be valid");
@@ -37,6 +38,7 @@ public class ClassFile {
         this.constructors = constructors;
         this.methods = methods;
         this.fields = fields;
+        this.isPrivate = isPrivate;
     }
 
     public String getName() {
@@ -79,6 +81,9 @@ public class ClassFile {
                 .findAny();
     }
 
+    public boolean isPrivate() {
+        return isPrivate;
+    }
 
     public static class Method {
 

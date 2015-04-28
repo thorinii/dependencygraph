@@ -1,11 +1,15 @@
 package me.lachlanap.dependencygraph.analyser.java;
 
-import java.util.*;
+import me.lachlanap.dependencygraph.analyser.Analysis;
+import me.lachlanap.dependencygraph.analyser.AnalysisBuilder;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 
 /**
- *
- * @author Lachlan Phillips
+ * Reads all the bottom-level entities in a project and returns the raw analysis.
  */
 public class ProjectAnalyser {
 
@@ -31,37 +35,14 @@ public class ProjectAnalyser {
         this.rootPackageOverride = rootPackageOverride;
     }
 
-    public ProjectAnalysis analyse() {
-        Map<String, ClassAnalysis> classesAnalysisByName = spider.findClassesToAnalyse().parallelStream()
+    public Analysis analyse() {
+        AnalysisBuilder classes = spider.findClassesToAnalyse().parallelStream()
                 .map(loader::load)
                 .map(parser::parse)
                 .map(classAnalyser::analyse)
-                .map(rewriter::rewrite)
-                .collect(Collectors.groupingBy(ClassAnalysis::getName,
-                                               Collectors.reducing(null, (a, b) -> {
-                                                   if (a == null)
-                                                       return b;
-                                                   else if (b == null)
-                                                       return a;
-                                                   else {
-                                                       Set<String> combined = new HashSet<>(a.getDependencies());
-                                                       combined.addAll(b.getDependencies());
-                                                       return new ClassAnalysis(a.getClassFile(), combined);
-                                                   }
-                                               })));
+                // TODO: map(rewriter::rewrite)
+                .reduce(AnalysisBuilder.empty(), AnalysisBuilder::merge);
 
-        List<ClassAnalysis> classesAnalysis = classesAnalysisByName.values().stream().collect(Collectors.toList());
-        loader.close();
-
-        List<PackageAnalysis> packagesAnalysis = packageAnalyser.analyse(classesAnalysis);
-
-        String rootPackage;
-        if (rootPackageOverride.isPresent())
-            rootPackage = rootPackageOverride.get();
-        else
-            rootPackage = packageAnalyser.findRootPackageFor(packagesAnalysis).orElse("");
-
-        return new ProjectAnalysis(rootPackage,
-                                   classesAnalysis, packagesAnalysis);
+        return classes.build();
     }
 }

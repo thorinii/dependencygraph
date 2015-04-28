@@ -1,12 +1,12 @@
 package me.lachlanap.dependencygraph.analyser.java;
 
-import java.util.*;
-import java.util.stream.Collectors;
-
 import org.objectweb.asm.*;
 
+import java.util.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
+
 /**
- *
  * @author Lachlan Phillips
  */
 public class Parser {
@@ -26,7 +26,14 @@ public class Parser {
         List<ClassFile.Method> methods = new ArrayList<>();
         List<ClassFile.Field> fields = new ArrayList<>();
 
+        AtomicBoolean isInnerClass = new AtomicBoolean(false);
+
         reader.accept(new ClassVisitor(Opcodes.ASM5) {
+            @Override
+            public void visitOuterClass(String owner, String name, String desc) {
+                isInnerClass.set(true);
+            }
+
             @Override
             public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
                 Set<String> referencedInCode = new HashSet<>();
@@ -89,7 +96,23 @@ public class Parser {
             }
         }, ClassReader.SKIP_FRAMES | ClassReader.SKIP_DEBUG);
 
-        return new ClassFile(className, parentName, interfaces, constructors, methods, fields);
+
+        boolean isPrivateInnerClass = isInnerClass.get();
+        int index = 0;
+        while (index < className.length()) {
+            index = className.indexOf("$", index);
+            if (index == -1)
+                break;
+            else {
+                if (Character.isDigit(className.charAt(index + 1)))
+                    isPrivateInnerClass &= true;
+                index++;
+            }
+        }
+        if (isPrivateInnerClass)
+            System.out.println(className);
+
+        return new ClassFile(className, parentName, interfaces, constructors, methods, fields, isPrivateInnerClass);
     }
 
     private String internalToBinaryClassName(String internal) {
@@ -112,25 +135,25 @@ public class Parser {
 
     private List<String> getArgumentTypes(String descriptor) {
         return Arrays.asList(Type.getArgumentTypes(descriptor)).stream()
-                .filter(t -> isObject(t))
-                .map(t -> t.getInternalName())
-                .map(n -> internalToBinaryClassName(n))
+                .filter(this::isObject)
+                .map(Type::getInternalName)
+                .map(this::internalToBinaryClassName)
                 .collect(Collectors.toList());
     }
 
     private List<String> getTypes(List<String> exceptions) {
         return exceptions.stream()
-                .map(e -> Type.getObjectType(e))
-                .map(t -> t.getInternalName())
-                .map(n -> internalToBinaryClassName(n))
+                .map(Type::getObjectType)
+                .map(Type::getInternalName)
+                .map(this::internalToBinaryClassName)
                 .collect(Collectors.toList());
     }
 
     private Optional<String> getReturnType(String descriptor) {
         return Optional.of(Type.getReturnType(descriptor))
-                .filter(t -> isObject(t))
-                .map(t -> t.getInternalName())
-                .map(n -> internalToBinaryClassName(n));
+                .filter(this::isObject)
+                .map(Type::getInternalName)
+                .map(this::internalToBinaryClassName);
     }
 
     private ClassFile.Code makeCode(Set<String> referencedInCode) {
@@ -139,9 +162,9 @@ public class Parser {
 
     private Optional<ClassFile.Field> makeField(String name, String descriptor) {
         return Optional.of(Type.getType(descriptor))
-                .filter(t -> isObject(t))
-                .map(t -> t.getInternalName())
-                .map(n -> internalToBinaryClassName(n))
+                .filter(this::isObject)
+                .map(Type::getInternalName)
+                .map(this::internalToBinaryClassName)
                 .map(n -> new ClassFile.Field(name, n));
     }
 

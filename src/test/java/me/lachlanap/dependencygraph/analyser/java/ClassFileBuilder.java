@@ -82,7 +82,7 @@ public class ClassFileBuilder {
     }
 
     public ClassFile build() {
-        return new ClassFile(name, parent, Collections.emptyList(), constructors, methods, fields);
+        return new ClassFile(name, parent, Collections.emptyList(), constructors, methods, fields, false);
     }
 
 }

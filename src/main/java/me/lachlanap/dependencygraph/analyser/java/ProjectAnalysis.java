@@ -1,5 +1,8 @@
 package me.lachlanap.dependencygraph.analyser.java;
 
+import me.lachlanap.dependencygraph.analyser.Analysis;
+
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -12,6 +15,10 @@ public class ProjectAnalysis {
     private final String rootPackage;
     private final List<ClassAnalysis> classesAnalysis;
     private final List<PackageAnalysis> packagesAnalysis;
+
+    public ProjectAnalysis(Analysis raw) {
+        this("", Collections.emptyList(), Collections.emptyList());
+    }
 
     public ProjectAnalysis(String rootPackage,
                            List<ClassAnalysis> classesAnalysis,

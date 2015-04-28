@@ -53,6 +53,9 @@ public class DependencyAnalyser {
         System.out.println("Dumping raw analysis");
         dumpRaw(config.outputPath.resolve("raw.json"), raw);
 
+        writeClasses(config.outputPath.resolve("classes.dot"), raw, false);
+        writeClasses(config.outputPath.resolve("classes-impl.dot"), raw, true);
+
         System.out.println("Done");
     }
 
@@ -92,10 +95,10 @@ public class DependencyAnalyser {
             throw new UnsupportedOperationException("Don't know how to read " + toAnalyse);
     }
 
-    private void dumpRaw(Path to, Analysis raw) throws IOException {
+    private void dumpRaw(Path toFile, Analysis raw) throws IOException {
         Map<String, Integer> entityIds = new HashMap<>();
         int nextId = 0;
-        try (BufferedWriter bw = Files.newBufferedWriter(to, StandardCharsets.UTF_8);
+        try (BufferedWriter bw = Files.newBufferedWriter(toFile, StandardCharsets.UTF_8);
              PrintWriter out = new PrintWriter(bw)) {
             out.println("{\"entities\": [");
 
@@ -129,26 +132,52 @@ public class DependencyAnalyser {
         System.out.println(raw);
     }
 
+    private void writeClasses(Path toFile, Analysis raw, boolean impl) throws IOException {
+        try (BufferedWriter bw = Files.newBufferedWriter(toFile, StandardCharsets.UTF_8);
+             PrintWriter out = new PrintWriter(bw)) {
+            out.println("digraph {");
+
+            for (Entity entity : raw.getEntities()) {
+                out.println("  \"" + entity.getName() + "\";");
+            }
+
+            out.println();
+
+            for (Dependency d : raw.getDependencies()) {
+                Entity from = d.getFrom();
+                Entity to = d.getTo();
+
+                if (d.getStrength() == CouplingStrength.Implementation && !impl)
+                    continue;
+
+                out.println("  \"" + from.getName() + "\" -> \"" + to.getName() + "\"" +
+                                    "[color=\"" + (d.getStrength() == CouplingStrength.Public ? "black" : "grey") + "\"];");
+            }
+
+            out.println("}");
+        }
+    }
+
     private void generateDiagrams(Path out, ProjectAnalysis analysis) throws DiagramWritingException {
         Util.createBlankDirectory(out);
 
         DiagramWriter writer = new DiagramWriter(out);
 
-        writer.writeDiagram("packages.dot", new PackageDiagram(analysis));
-        writer.writeDiagram("classes.dot", new ClassDiagram(analysis));
-        writer.writeDiagram("classes-partitioned.dot", new PartitionedClassDiagram(analysis));
+        writer.writeDiagram("O_packages.dot", new PackageDiagram(analysis));
+        writer.writeDiagram("O_classes.dot", new ClassDiagram(analysis));
+        writer.writeDiagram("O_classes-partitioned.dot", new PartitionedClassDiagram(analysis));
 
 
         ProjectAnalysis projectClasses = analysis.keepOnlyProjectClasses();
 
-        writer.writeDiagram("project-packages.dot", new PackageDiagram(projectClasses));
-        writer.writeDiagram("project-classes.dot", new ClassDiagram(projectClasses));
-        writer.writeDiagram("project-classes-partitioned.dot", new PartitionedClassDiagram(projectClasses));
+        writer.writeDiagram("O_project-packages.dot", new PackageDiagram(projectClasses));
+        writer.writeDiagram("O_project-classes.dot", new ClassDiagram(projectClasses));
+        writer.writeDiagram("O_project-classes-partitioned.dot", new PartitionedClassDiagram(projectClasses));
 
         projectClasses.getPackageAnalysis().parallelStream().forEach(pack -> {
             ProjectAnalysis filteredByPackage = analysis.keepOnlyAnalysisMatching(p -> p.equals(pack.getName()));
 
-            writer.writeDiagram("project-classes-partitioned-" + pack.getName() + ".dot",
+            writer.writeDiagram("O_project-classes-partitioned-" + pack.getName() + ".dot",
                                 new PartitionedClassDiagram(filteredByPackage));
         });
     }

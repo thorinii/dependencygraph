@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -49,6 +50,18 @@ public class AnalysisBuilder {
                                            .collect(Collectors.toList()));
     }
 
+    public AnalysisBuilder rewrite(Function<Entity, Entity> map) {
+        List<Entity> rewrittenProjectEntities = projectEntities.stream()
+                .map(map::apply)
+                .collect(Collectors.toList());
+
+        List<Dependency> rewrittenDependencies = dependencies.stream()
+                .map(d -> new Dependency(map.apply(d.getFrom()), map.apply(d.getTo()), d.getStrength()))
+                .collect(Collectors.toList());
+
+        return new AnalysisBuilder(rewrittenProjectEntities, rewrittenDependencies);
+    }
+
     public Analysis build() {
         Map<Dependency, List<Dependency>> duplicatesDependencies = dependencies.stream().collect(Collectors.groupingBy(a -> a));
         List<Dependency> dependencies = duplicatesDependencies.values().stream()
@@ -56,6 +69,12 @@ public class AnalysisBuilder {
                 .filter(Dependency::isNotSelf)
                 .collect(Collectors.toList());
 
-        return new Analysis(projectEntities, dependencies);
+        List<Entity> rewrittenProjectEntities = projectEntities.stream()
+                .collect(Collectors.groupingBy(Entity::getName))
+                .entrySet().stream()
+                .map(e -> e.getValue().get(0))
+                .collect(Collectors.toList());
+
+        return new Analysis(rewrittenProjectEntities, dependencies);
     }
 }

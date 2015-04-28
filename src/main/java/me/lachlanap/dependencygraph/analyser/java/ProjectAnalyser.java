@@ -2,11 +2,9 @@ package me.lachlanap.dependencygraph.analyser.java;
 
 import me.lachlanap.dependencygraph.analyser.Analysis;
 import me.lachlanap.dependencygraph.analyser.AnalysisBuilder;
+import me.lachlanap.dependencygraph.analyser.Entity;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.function.BinaryOperator;
-import java.util.stream.Collectors;
 
 /**
  * Reads all the bottom-level entities in a project and returns the raw analysis.
@@ -40,9 +38,17 @@ public class ProjectAnalyser {
                 .map(loader::load)
                 .map(parser::parse)
                 .map(classAnalyser::analyse)
-                // TODO: map(rewriter::rewrite)
                 .reduce(AnalysisBuilder.empty(), AnalysisBuilder::merge);
 
-        return classes.build();
+
+        AnalysisBuilder rewritten = classes.rewrite(e -> {
+            int index = e.getName().indexOf('$');
+            if (index >= 0) {
+                return new Entity(e.getName().substring(0, index));
+            } else
+                return e;
+        });
+
+        return rewritten.build();
     }
 }

@@ -37,6 +37,7 @@ public class Parser {
             @Override
             public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
                 Set<String> referencedInCode = new HashSet<>();
+                boolean isPublic = (access & Opcodes.ACC_PRIVATE) == 0;
 
                 return new MethodVisitor(Opcodes.ASM5) {
 
@@ -74,12 +75,12 @@ public class Parser {
                         if (isConstructor(name)) {
                             constructors.add(makeConstructor(desc,
                                                              makeCode(referencedInCode),
-                                                             exceptionTypes));
+                                                             exceptionTypes, isPublic));
                         } else {
                             methods.add(makeMethod(name,
                                                    desc,
                                                    makeCode(referencedInCode),
-                                                   exceptionTypes));
+                                                   exceptionTypes, isPublic));
                         }
                     }
                 };
@@ -109,8 +110,6 @@ public class Parser {
                 index++;
             }
         }
-        if (isPrivateInnerClass)
-            System.out.println(className);
 
         return new ClassFile(className, parentName, interfaces, constructors, methods, fields, isPrivateInnerClass);
     }
@@ -125,12 +124,12 @@ public class Parser {
         return methodName.equals("<init>");
     }
 
-    private ClassFile.Method makeConstructor(String descriptor, ClassFile.Code code, List<String> exceptions) {
-        return new ClassFile.Method("<init>", getArgumentTypes(descriptor), code, getTypes(exceptions));
+    private ClassFile.Method makeConstructor(String descriptor, ClassFile.Code code, List<String> exceptions, boolean isPublic) {
+        return new ClassFile.Method("<init>", getArgumentTypes(descriptor), code, getTypes(exceptions), isPublic);
     }
 
-    private ClassFile.Method makeMethod(String name, String descriptor, ClassFile.Code code, List<String> exceptions) {
-        return new ClassFile.Method(name, getArgumentTypes(descriptor), getReturnType(descriptor), code, getTypes(exceptions));
+    private ClassFile.Method makeMethod(String name, String descriptor, ClassFile.Code code, List<String> exceptions, boolean isPublic) {
+        return new ClassFile.Method(name, getArgumentTypes(descriptor), getReturnType(descriptor), code, getTypes(exceptions), isPublic);
     }
 
     private List<String> getArgumentTypes(String descriptor) {

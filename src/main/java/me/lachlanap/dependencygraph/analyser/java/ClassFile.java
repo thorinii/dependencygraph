@@ -92,12 +92,13 @@ public class ClassFile {
         private final Optional<String> returnType;
         private final List<String> exceptions;
         private final Code code;
+        private final boolean isPublic;
 
-        public Method(String name, List<String> arguments, Code code, List<String> exceptions) {
-            this(name, arguments, Optional.empty(), code, exceptions);
+        public Method(String name, List<String> arguments, Code code, List<String> exceptions, boolean isPublic) {
+            this(name, arguments, Optional.empty(), code, exceptions, isPublic);
         }
 
-        public Method(String name, List<String> arguments, Optional<String> returnType, Code code, List<String> exceptions) {
+        public Method(String name, List<String> arguments, Optional<String> returnType, Code code, List<String> exceptions, boolean isPublic) {
             if (name.equals("<init>") && returnType.isPresent())
                 throw new IllegalArgumentException("Constructor does not return a type");
 
@@ -106,6 +107,7 @@ public class ClassFile {
             this.returnType = returnType;
             this.code = code;
             this.exceptions = exceptions;
+            this.isPublic = isPublic;
         }
 
         public boolean isConstructor() {
@@ -130,6 +132,10 @@ public class ClassFile {
 
         public Code getCode() {
             return code;
+        }
+
+        public boolean isPublic() {
+            return isPublic;
         }
 
         @Override

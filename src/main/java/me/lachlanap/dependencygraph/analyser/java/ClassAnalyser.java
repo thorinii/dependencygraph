@@ -24,18 +24,29 @@ public class ClassAnalyser {
         dependencies.addAll(pub(entity, classFile.getInterfaces()));
 
         classFile.getConstructors().forEach(c -> {
-            dependencies.addAll(pub(entity, c.getArgumentTypes()));
+            if (c.isPublic())
+                dependencies.addAll(pub(entity, c.getArgumentTypes()));
+            else
+                dependencies.addAll(impl(entity, c.getArgumentTypes()));
             dependencies.addAll(impl(entity, c.getCode().getReferencedTypes()));
         });
 
         classFile.getMethods().forEach(m -> {
-            dependencies.addAll(pub(entity, m.getArgumentTypes()));
-            dependencies.addAll(pub(entity, m.getExceptions()));
+            if (m.isPublic()) {
+                dependencies.addAll(pub(entity, m.getArgumentTypes()));
+                dependencies.addAll(pub(entity, m.getExceptions()));
+                m.getReturnType().ifPresent(t -> dependencies.add(pub(entity, t)));
+            } else {
+                dependencies.addAll(impl(entity, m.getArgumentTypes()));
+                dependencies.addAll(impl(entity, m.getExceptions()));
+                m.getReturnType().ifPresent(t -> dependencies.add(impl(entity, t)));
+            }
+
             dependencies.addAll(impl(entity, m.getCode().getReferencedTypes()));
-            m.getReturnType().ifPresent(t -> dependencies.add(pub(entity, t)));
         });
 
         classFile.getFields().forEach(f -> dependencies.add(pub(entity, f.getType())));
+
 
         if (classFile.isPrivate()) {
             List<Dependency> tmp = dependencies.stream()

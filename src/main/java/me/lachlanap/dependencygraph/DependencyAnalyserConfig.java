@@ -7,17 +7,15 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- *
  * @author Lachlan Phillips
  */
 public class DependencyAnalyserConfig {
 
     public final List<Path> toAnalyse = new ArrayList<>();
     public Path outputPath;
-
     public Optional<String> rootProjectPackage = Optional.empty();
+    private boolean filterCoreJava = true;
 
-    public boolean filterCoreJava = true;
 
     public void addToAnalyse(String whatToAnalyse) {
         toAnalyse.add(Paths.get(whatToAnalyse));
@@ -29,5 +27,13 @@ public class DependencyAnalyserConfig {
 
     public void setRootProjectPackage(String root) {
         rootProjectPackage = Optional.of(root);
+    }
+
+    public boolean filterCoreJava() {
+        return filterCoreJava;
+    }
+
+    public void setFilterCoreJava(boolean filterCoreJava) {
+        this.filterCoreJava = filterCoreJava;
     }
 }

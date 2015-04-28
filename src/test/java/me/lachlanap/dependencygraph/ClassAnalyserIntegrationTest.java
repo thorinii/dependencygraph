@@ -1,12 +1,11 @@
 package me.lachlanap.dependencygraph;
 
-import me.lachlanap.dependencygraph.analysis.ClassFile;
-import me.lachlanap.dependencygraph.analysis.analyser.ClassAnalyser;
-import me.lachlanap.dependencygraph.analysis.analyser.ClassAnalysis;
-import me.lachlanap.dependencygraph.analysis.*;
-import me.lachlanap.dependencygraph.analysis.io.Loader;
-import me.lachlanap.dependencygraph.analysis.io.Parser;
-import me.lachlanap.dependencygraph.analysis.io.ResourceLoader;
+import me.lachlanap.dependencygraph.analyser.java.ClassFile;
+import me.lachlanap.dependencygraph.analyser.java.ClassAnalyser;
+import me.lachlanap.dependencygraph.analyser.java.ClassAnalysis;
+import me.lachlanap.dependencygraph.analyser.java.Loader;
+import me.lachlanap.dependencygraph.analyser.java.Parser;
+import me.lachlanap.dependencygraph.io.ResourceLoader;
 import org.junit.Test;
 
 import static org.hamcrest.CoreMatchers.*;

@@ -1,25 +1,22 @@
 package me.lachlanap.dependencygraph;
 
+import me.lachlanap.dependencygraph.analyser.java.*;
+import me.lachlanap.dependencygraph.analyser.java.rewrite.InnerClassRewriter;
+import me.lachlanap.dependencygraph.analyser.java.spider.CompositeSpider;
+import me.lachlanap.dependencygraph.analyser.java.spider.DirectorySpider;
+import me.lachlanap.dependencygraph.analyser.java.spider.JarSpider;
+import me.lachlanap.dependencygraph.diagram.*;
+import me.lachlanap.dependencygraph.io.CompositeLoader;
+import me.lachlanap.dependencygraph.io.DirectoryLoader;
+import me.lachlanap.dependencygraph.io.JarLoader;
+
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import me.lachlanap.dependencygraph.analysis.ProjectAnalyser;
-import me.lachlanap.dependencygraph.analysis.ProjectAnalysis;
-import me.lachlanap.dependencygraph.analysis.analyser.ClassAnalyser;
-import me.lachlanap.dependencygraph.analysis.analyser.PackageAnalyser;
-import me.lachlanap.dependencygraph.analysis.filter.IncludingPackageFilter;
-import me.lachlanap.dependencygraph.analysis.io.*;
-import me.lachlanap.dependencygraph.analysis.rewrite.InnerClassRewriter;
-import me.lachlanap.dependencygraph.analysis.spider.CompositeSpider;
-import me.lachlanap.dependencygraph.analysis.spider.DirectorySpider;
-import me.lachlanap.dependencygraph.analysis.spider.JarSpider;
-import me.lachlanap.dependencygraph.analysis.spider.Spider;
-import me.lachlanap.dependencygraph.diagram.*;
 
 /**
- *
  * @author Lachlan Phillips
  */
 public class DependencyAnalyser {
@@ -37,11 +34,13 @@ public class DependencyAnalyser {
         System.out.println("Analysing project");
         ProjectAnalysis analysis = analyser.analyse();
 
-        if (config.filterCoreJava)
+        if (config.filterCoreJava())
             analysis = analysis.keepOnly(new IncludingPackageFilter("java", "javax").invert());
 
         System.out.println("Generating diagrams");
         generateDiagrams(config.outputPath, analysis);
+
+        System.out.println("Done");
     }
 
     private ProjectAnalyser buildAnalyser(List<Path> toAnalyse, Optional<String> rootPackageOverride) {
@@ -50,7 +49,7 @@ public class DependencyAnalyser {
         ThreadSafeLoader loader = new CompositeLoader(
                 toAnalyse.stream().map(this::loaderFor).collect(Collectors.toList()));
 
-        ProjectAnalyser analyser = new ProjectAnalyser(
+        return new ProjectAnalyser(
                 spider,
                 loader,
                 new Parser(),
@@ -58,7 +57,6 @@ public class DependencyAnalyser {
                 new PackageAnalyser(),
                 new InnerClassRewriter(),
                 rootPackageOverride);
-        return analyser;
     }
 
     private Spider spiderFor(Path toAnalyse) {

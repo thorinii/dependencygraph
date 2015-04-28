@@ -1,8 +1,8 @@
 package me.lachlanap.dependencygraph.diagram;
 
 import java.util.List;
-import me.lachlanap.dependencygraph.analysis.ProjectAnalysis;
-import me.lachlanap.dependencygraph.analysis.analyser.ClassAnalysis;
+import me.lachlanap.dependencygraph.analyser.java.ProjectAnalysis;
+import me.lachlanap.dependencygraph.analyser.java.ClassAnalysis;
 
 /**
  *

@@ -25,10 +25,23 @@ import java.util.stream.Collectors;
  * @author Lachlan Phillips
  */
 public class DependencyAnalyser {
+    private final Spider spider;
+    private final Loader loader;
+    private final Parser parser;
+    private final ClassAnalyser analyser;
+    private final Rewriter rewriter;
 
-    public void analyse(Path out, List<Path> toAnalyse, boolean filterCoreJava) throws IOException {
+    public DependencyAnalyser(Spider spider, Loader loader, Parser parser, ClassAnalyser analyser, Rewriter rewriter) {
+        this.spider = spider;
+        this.loader = loader;
+        this.parser = parser;
+        this.analyser = analyser;
+        this.rewriter = rewriter;
+    }
+
+    public void analyse(Path out, boolean filterCoreJava) throws IOException {
         System.out.println("Analysing project");
-        Analysis raw = analyse(toAnalyse);
+        Analysis raw = analyse();
 
         if (filterCoreJava) { // TODO: refactor this into Java specific
             raw = new AnalysisBuilder(raw).removeDependencies("java.").build();
@@ -47,43 +60,17 @@ public class DependencyAnalyser {
         System.out.println("Done");
     }
 
-    private Analysis analyse(List<Path> toAnalyse) {
-        Spider spider = new CompositeSpider(
-                toAnalyse.stream().map(this::spiderFor).collect(Collectors.toList()));
-        Loader loader = new CompositeLoader(
-                toAnalyse.stream().map(this::loaderFor).collect(Collectors.toList()));
-
-        return analyse(
-                spider,
-                loader,
-                new Parser(),
-                new ClassAnalyser(),
-                INNER_CLASS_REWRITER);
-    }
-
-    private Analysis analyse(Spider spider,
-                             Loader loader,
-                             Parser parse,
-                             ClassAnalyser classAnalyser,
-                             Rewriter rewriter) {
+    private Analysis analyse() {
         AnalysisBuilder entities = spider.findClassesToAnalyse().parallelStream()
                 .map(loader::load)
-                .map(parse::parse)
-                .map(classAnalyser::analyse)
+                .map(parser::parse)
+                .map(analyser::analyse)
                 .reduce(AnalysisBuilder.empty(), AnalysisBuilder::merge);
 
         AnalysisBuilder rewritten = entities.rewrite(rewriter);
 
         return rewritten.build();
     }
-
-    private static final Rewriter INNER_CLASS_REWRITER = e -> {
-        int index = e.getName().indexOf('$');
-        if (index >= 0) {
-            return e.changeName(e.getName().substring(0, index));
-        } else
-            return e;
-    };
 
     private void writeDiagrams(Path out, String prefix, Analysis raw, boolean stripPrefix) throws IOException {
         writeClasses(out.resolve(prefix + "-classes.dot"), raw, false, stripPrefix);
@@ -94,26 +81,6 @@ public class DependencyAnalyser {
         Analysis packages = new AnalysisBuilder(raw).useParent().build();
         writeClasses(out.resolve(prefix + "-packages.dot"), packages, false, false);
         writeClasses(out.resolve(prefix + "-packages-impl.dot"), packages, true, false);
-    }
-
-    private Spider spiderFor(Path toAnalyse) {
-        if (Files.isDirectory(toAnalyse))
-            return new DirectorySpider(toAnalyse);
-        else if (toAnalyse.toString().toLowerCase().endsWith(".jar"))
-            return new JarSpider(toAnalyse);
-        else
-            throw new UnsupportedOperationException("Don't know how to read " + toAnalyse);
-    }
-
-    private Loader loaderFor(Path toAnalyse) {
-        if (Files.isDirectory(toAnalyse))
-            return new DirectoryLoader(toAnalyse);
-        else if (toAnalyse.toString().toLowerCase().endsWith(".jar")) {
-            JarLoader loader = new JarLoader(toAnalyse);
-            loader.init();
-            return loader;
-        } else
-            throw new UnsupportedOperationException("Don't know how to read " + toAnalyse);
     }
 
     private void dumpRawJson(Path toFile, Analysis raw) throws IOException {

@@ -46,21 +46,21 @@ public class DependencyAnalyser {
         dumpRaw(config.outputPath.resolve("raw.json"), raw);
 
         System.out.println("Generating diagrams");
-        writeDiagrams("all", raw);
-        writeDiagrams("proj", new AnalysisBuilder(raw).removeNonProjectDependencies().build());
+        writeDiagrams("all", raw, false);
+        writeDiagrams("proj", new AnalysisBuilder(raw).removeNonProjectDependencies().build(), true);
 
         System.out.println("Done");
     }
 
-    private void writeDiagrams(String prefix, Analysis raw) throws IOException {
-        writeClasses(config.outputPath.resolve(prefix + "-classes.dot"), raw, false);
-        writeClasses(config.outputPath.resolve(prefix + "-classes-impl.dot"), raw, true);
+    private void writeDiagrams(String prefix, Analysis raw, boolean stripPrefix) throws IOException {
+        writeClasses(config.outputPath.resolve(prefix + "-classes.dot"), raw, false, stripPrefix);
+        writeClasses(config.outputPath.resolve(prefix + "-classes-impl.dot"), raw, true, stripPrefix);
 
-        writeIsolatedClasses(config.outputPath.resolve(prefix + "-classes-isolated.dot"), raw);
+        writeIsolatedClasses(config.outputPath.resolve(prefix + "-classes-isolated.dot"), raw, stripPrefix);
 
         Analysis packages = new AnalysisBuilder(raw).useParent().build();
-        writeClasses(config.outputPath.resolve(prefix + "-packages.dot"), packages, false);
-        writeClasses(config.outputPath.resolve(prefix + "-packages-impl.dot"), packages, true);
+        writeClasses(config.outputPath.resolve(prefix + "-packages.dot"), packages, false, false);
+        writeClasses(config.outputPath.resolve(prefix + "-packages-impl.dot"), packages, true, false);
     }
 
     private ProjectAnalyser buildAnalyser(List<Path> toAnalyse) {
@@ -137,14 +137,14 @@ public class DependencyAnalyser {
         System.out.println(raw);
     }
 
-    private void writeClasses(Path toFile, Analysis raw, boolean impl) throws IOException {
+    private void writeClasses(Path toFile, Analysis raw, boolean impl, boolean stripPrefix) throws IOException {
         try (BufferedWriter bw = Files.newBufferedWriter(toFile, StandardCharsets.UTF_8);
              PrintWriter out = new PrintWriter(bw)) {
             out.println("digraph {");
             out.println("  rankdir=LR;");
 
             for (Entity entity : raw.getEntities()) {
-                out.println("  \"" + entity.getName() + "\";");
+                out.println("  \"" + name(entity, stripPrefix, raw) + "\";");
             }
 
             out.println();
@@ -156,7 +156,7 @@ public class DependencyAnalyser {
                 if (d.getStrength() == CouplingStrength.Implementation && !impl)
                     continue;
 
-                out.println("  \"" + from.getName() + "\" -> \"" + to.getName() + "\"" +
+                out.println("  \"" + name(from, stripPrefix, raw) + "\" -> \"" + name(to, stripPrefix, raw) + "\"" +
                                     "[color=\"" + (d.getStrength() == CouplingStrength.Public ? "black" : "grey") + "\"];");
             }
 
@@ -164,7 +164,7 @@ public class DependencyAnalyser {
         }
     }
 
-    private void writeIsolatedClasses(Path toFile, Analysis raw) throws IOException {
+    private void writeIsolatedClasses(Path toFile, Analysis raw, boolean stripPrefix) throws IOException {
         Set<Entity> isolated = new HashSet<>(raw.getEntities());
 
         for (Dependency d : raw.getDependencies())
@@ -176,7 +176,7 @@ public class DependencyAnalyser {
             out.println("  rankdir=LR;");
 
             for (Entity entity : isolated) {
-                out.println("  \"" + entity.getName() + "\";");
+                out.println("  \"" + name(entity, stripPrefix, raw) + "\";");
             }
 
             out.println();
@@ -186,10 +186,14 @@ public class DependencyAnalyser {
                 Entity to = d.getTo();
 
                 if (isolated.contains(from))
-                    out.println("  \"" + from.getName() + "\" -> \"" + to.getName() + "\";");
+                    out.println("  \"" + name(from, stripPrefix, raw) + "\" -> \"" + name(to, stripPrefix, raw) + "\";");
             }
 
             out.println("}");
         }
+    }
+
+    private String name(Entity e, boolean stripPrefix, Analysis raw) {
+        return stripPrefix ? e.getName(raw.getCommonPrefix()) : e.getName();
     }
 }

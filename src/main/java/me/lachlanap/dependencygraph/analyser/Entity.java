@@ -22,6 +22,10 @@ public final class Entity {
         return name;
     }
 
+    public String getName(String commonPrefix) {
+        return name.substring(commonPrefix.length());
+    }
+
     public boolean hasParent() {
         return parent != null;
     }

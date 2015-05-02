@@ -1,8 +1,8 @@
 package me.lachlanap.dependencygraph.io;
 
+import me.lachlanap.dependencygraph.analyser.java.Loader;
 import me.lachlanap.dependencygraph.analyser.java.LoaderCouldNotFindClassException;
 import me.lachlanap.dependencygraph.analyser.java.LoadingFailedException;
-import me.lachlanap.dependencygraph.analyser.java.ThreadSafeLoader;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,10 +10,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
- *
  * @author Lachlan Phillips
  */
-public class DirectoryLoader extends AbstractIOLoader implements ThreadSafeLoader {
+public class DirectoryLoader extends AbstractIOLoader implements Loader {
 
     private final Path directory;
 

@@ -1,8 +1,8 @@
 package me.lachlanap.dependencygraph.io;
 
+import me.lachlanap.dependencygraph.analyser.java.Loader;
 import me.lachlanap.dependencygraph.analyser.java.LoaderCouldNotFindClassException;
 import me.lachlanap.dependencygraph.analyser.java.LoadingFailedException;
-import me.lachlanap.dependencygraph.analyser.java.ThreadSafeLoader;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -15,10 +15,9 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
 /**
- *
  * @author Lachlan Phillips
  */
-public class JarLoader extends AbstractIOLoader implements ThreadSafeLoader {
+public class JarLoader extends AbstractIOLoader implements Loader {
 
     private final Path jar;
     private final Map<String, byte[]> cache;

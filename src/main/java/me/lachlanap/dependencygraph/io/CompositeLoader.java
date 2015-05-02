@@ -3,21 +3,19 @@ package me.lachlanap.dependencygraph.io;
 import me.lachlanap.dependencygraph.analyser.java.Loader;
 import me.lachlanap.dependencygraph.analyser.java.LoaderCouldNotFindClassException;
 import me.lachlanap.dependencygraph.analyser.java.LoadingFailedException;
-import me.lachlanap.dependencygraph.analyser.java.ThreadSafeLoader;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
 /**
- *
  * @author Lachlan Phillips
  */
-public class CompositeLoader implements ThreadSafeLoader {
+public class CompositeLoader implements Loader {
 
-    private final List<ThreadSafeLoader> loaders;
+    private final List<Loader> loaders;
 
-    public CompositeLoader(List<ThreadSafeLoader> loaders) {
+    public CompositeLoader(List<Loader> loaders) {
         if (loaders.isEmpty())
             throw new IllegalArgumentException("Must have at least one loader");
         this.loaders = loaders;

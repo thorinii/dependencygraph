@@ -1,7 +1,10 @@
 package me.lachlanap.dependencygraph;
 
 import me.lachlanap.dependencygraph.analyser.*;
-import me.lachlanap.dependencygraph.analyser.java.*;
+import me.lachlanap.dependencygraph.analyser.java.ClassAnalyser;
+import me.lachlanap.dependencygraph.analyser.java.Loader;
+import me.lachlanap.dependencygraph.analyser.java.Parser;
+import me.lachlanap.dependencygraph.analyser.java.Spider;
 import me.lachlanap.dependencygraph.analyser.java.spider.CompositeSpider;
 import me.lachlanap.dependencygraph.analyser.java.spider.DirectorySpider;
 import me.lachlanap.dependencygraph.analyser.java.spider.JarSpider;
@@ -22,7 +25,7 @@ import java.util.stream.Collectors;
  * @author Lachlan Phillips
  */
 public class DependencyAnalyser {
-    
+
     public void analyse(Path out, List<Path> toAnalyse, boolean filterCoreJava) throws IOException {
         System.out.println("Analysing project");
         Analysis raw = analyse(toAnalyse);
@@ -47,7 +50,7 @@ public class DependencyAnalyser {
     private Analysis analyse(List<Path> toAnalyse) {
         Spider spider = new CompositeSpider(
                 toAnalyse.stream().map(this::spiderFor).collect(Collectors.toList()));
-        ThreadSafeLoader loader = new CompositeLoader(
+        Loader loader = new CompositeLoader(
                 toAnalyse.stream().map(this::loaderFor).collect(Collectors.toList()));
 
         return analyse(
@@ -102,7 +105,7 @@ public class DependencyAnalyser {
             throw new UnsupportedOperationException("Don't know how to read " + toAnalyse);
     }
 
-    private ThreadSafeLoader loaderFor(Path toAnalyse) {
+    private Loader loaderFor(Path toAnalyse) {
         if (Files.isDirectory(toAnalyse))
             return new DirectoryLoader(toAnalyse);
         else if (toAnalyse.toString().toLowerCase().endsWith(".jar")) {

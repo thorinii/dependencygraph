@@ -13,7 +13,6 @@ public class DependencyAnalyserConfig {
 
     public final List<Path> toAnalyse = new ArrayList<>();
     public Path outputPath;
-    public Optional<String> rootProjectPackage = Optional.empty();
     private boolean filterCoreJava = true;
 
 
@@ -23,10 +22,6 @@ public class DependencyAnalyserConfig {
 
     public void setOutputPath(String out) {
         outputPath = Paths.get(out);
-    }
-
-    public void setRootProjectPackage(String root) {
-        rootProjectPackage = Optional.of(root);
     }
 
     public boolean filterCoreJava() {

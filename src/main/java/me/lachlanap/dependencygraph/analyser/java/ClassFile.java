@@ -50,7 +50,10 @@ public class ClassFile {
     }
 
     public String getPackage() {
-        return name.substring(0, name.lastIndexOf('.'));
+        if(name.indexOf('.') == -1)
+            return "";
+        else
+            return name.substring(0, name.lastIndexOf('.'));
     }
 
     public List<String> getInterfaces() {

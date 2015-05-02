@@ -6,13 +6,34 @@ package me.lachlanap.dependencygraph.analyser;
  */
 public final class Entity {
     private final String name;
+    private final Entity parent;
+
+    public Entity(String name, Entity parent) {
+        this.name = name;
+        this.parent = parent;
+    }
 
     public Entity(String name) {
         this.name = name;
+        this.parent = null;
     }
 
     public String getName() {
         return name;
+    }
+
+    public boolean hasParent() {
+        return parent != null;
+    }
+
+    public Entity getParent() {
+        if (parent == null)
+            throw new UnsupportedOperationException(this + " does not have a parent");
+        return parent;
+    }
+
+    public Entity changeName(String name) {
+        return new Entity(name, this.parent);
     }
 
     @Override

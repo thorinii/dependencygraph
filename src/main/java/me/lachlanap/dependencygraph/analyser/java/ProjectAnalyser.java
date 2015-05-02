@@ -15,22 +15,14 @@ public class ProjectAnalyser {
     private final Loader loader;
     private final Parser parser;
     private final ClassAnalyser classAnalyser;
-    private final PackageAnalyser packageAnalyser;
-    private final Rewriter rewriter;
-    private final Optional<String> rootPackageOverride;
 
     public ProjectAnalyser(Spider spider,
                            ThreadSafeLoader loader, Parser parser,
-                           ClassAnalyser classAnalyser, PackageAnalyser packageAnalyser,
-                           Rewriter rewriter,
-                           Optional<String> rootPackageOverride) {
+                           ClassAnalyser classAnalyser) {
         this.spider = spider;
         this.loader = loader;
         this.parser = parser;
         this.classAnalyser = classAnalyser;
-        this.packageAnalyser = packageAnalyser;
-        this.rewriter = rewriter;
-        this.rootPackageOverride = rootPackageOverride;
     }
 
     public Analysis analyse() {
@@ -44,7 +36,7 @@ public class ProjectAnalyser {
         AnalysisBuilder rewritten = classes.rewrite(e -> {
             int index = e.getName().indexOf('$');
             if (index >= 0) {
-                return new Entity(e.getName().substring(0, index));
+                return e.changeName(e.getName().substring(0, index));
             } else
                 return e;
         });

@@ -2,11 +2,9 @@ package me.lachlanap.dependencygraph;
 
 import me.lachlanap.dependencygraph.analyser.*;
 import me.lachlanap.dependencygraph.analyser.java.*;
-import me.lachlanap.dependencygraph.analyser.java.rewrite.InnerClassRewriter;
 import me.lachlanap.dependencygraph.analyser.java.spider.CompositeSpider;
 import me.lachlanap.dependencygraph.analyser.java.spider.DirectorySpider;
 import me.lachlanap.dependencygraph.analyser.java.spider.JarSpider;
-import me.lachlanap.dependencygraph.diagram.*;
 import me.lachlanap.dependencygraph.io.CompositeLoader;
 import me.lachlanap.dependencygraph.io.DirectoryLoader;
 import me.lachlanap.dependencygraph.io.JarLoader;
@@ -17,10 +15,7 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -36,7 +31,7 @@ public class DependencyAnalyser {
 
     public void analyse() throws IOException {
         System.out.println("Initialising");
-        ProjectAnalyser analyser = buildAnalyser(config.toAnalyse, config.rootProjectPackage);
+        ProjectAnalyser analyser = buildAnalyser(config.toAnalyse);
 
         System.out.println("Analysing project");
         Analysis raw = analyser.analyse();
@@ -45,21 +40,30 @@ public class DependencyAnalyser {
             raw = new AnalysisBuilder(raw).removeDependencies("java.").build();
         }
 
-        ProjectAnalysis analysis = new ProjectAnalysis(raw);
-
-        System.out.println("Generating diagrams");
-        generateDiagrams(config.outputPath, analysis);
+        Util.createBlankDirectory(config.outputPath);
 
         System.out.println("Dumping raw analysis");
         dumpRaw(config.outputPath.resolve("raw.json"), raw);
 
-        writeClasses(config.outputPath.resolve("classes.dot"), raw, false);
-        writeClasses(config.outputPath.resolve("classes-impl.dot"), raw, true);
+        System.out.println("Generating diagrams");
+        writeDiagrams("all", raw);
+        writeDiagrams("proj", new AnalysisBuilder(raw).removeNonProjectDependencies().build());
 
         System.out.println("Done");
     }
 
-    private ProjectAnalyser buildAnalyser(List<Path> toAnalyse, Optional<String> rootPackageOverride) {
+    private void writeDiagrams(String prefix, Analysis raw) throws IOException {
+        writeClasses(config.outputPath.resolve(prefix + "-classes.dot"), raw, false);
+        writeClasses(config.outputPath.resolve(prefix + "-classes-impl.dot"), raw, true);
+
+        writeIsolatedClasses(config.outputPath.resolve(prefix + "-classes-isolated.dot"), raw);
+
+        Analysis packages = new AnalysisBuilder(raw).useParent().build();
+        writeClasses(config.outputPath.resolve(prefix + "-packages.dot"), packages, false);
+        writeClasses(config.outputPath.resolve(prefix + "-packages-impl.dot"), packages, true);
+    }
+
+    private ProjectAnalyser buildAnalyser(List<Path> toAnalyse) {
         Spider spider = new CompositeSpider(
                 toAnalyse.stream().map(this::spiderFor).collect(Collectors.toList()));
         ThreadSafeLoader loader = new CompositeLoader(
@@ -69,10 +73,7 @@ public class DependencyAnalyser {
                 spider,
                 loader,
                 new Parser(),
-                new ClassAnalyser(),
-                new PackageAnalyser(),
-                new InnerClassRewriter(),
-                rootPackageOverride);
+                new ClassAnalyser());
     }
 
     private Spider spiderFor(Path toAnalyse) {
@@ -103,7 +104,11 @@ public class DependencyAnalyser {
             out.println("{\"entities\": [");
 
             for (Entity entity : raw.getEntities()) {
-                out.println("  \"" + entity.getName() + "\",");
+                if (entity.hasParent())
+                    out.println("  {\"name\":\"" + entity.getName() + "\"," +
+                                        "\"parent\":\"" + entity.getParent().getName() + "\"},");
+                else
+                    out.println("  {\"name\":\"" + entity.getName() + "\"},");
                 entityIds.put(entity.getName(), nextId++);
             }
 
@@ -136,6 +141,7 @@ public class DependencyAnalyser {
         try (BufferedWriter bw = Files.newBufferedWriter(toFile, StandardCharsets.UTF_8);
              PrintWriter out = new PrintWriter(bw)) {
             out.println("digraph {");
+            out.println("  rankdir=LR;");
 
             for (Entity entity : raw.getEntities()) {
                 out.println("  \"" + entity.getName() + "\";");
@@ -158,27 +164,32 @@ public class DependencyAnalyser {
         }
     }
 
-    private void generateDiagrams(Path out, ProjectAnalysis analysis) throws DiagramWritingException {
-        Util.createBlankDirectory(out);
+    private void writeIsolatedClasses(Path toFile, Analysis raw) throws IOException {
+        Set<Entity> isolated = new HashSet<>(raw.getEntities());
 
-        DiagramWriter writer = new DiagramWriter(out);
+        for (Dependency d : raw.getDependencies())
+            isolated.remove(d.getTo());
 
-        writer.writeDiagram("O_packages.dot", new PackageDiagram(analysis));
-        writer.writeDiagram("O_classes.dot", new ClassDiagram(analysis));
-        writer.writeDiagram("O_classes-partitioned.dot", new PartitionedClassDiagram(analysis));
+        try (BufferedWriter bw = Files.newBufferedWriter(toFile, StandardCharsets.UTF_8);
+             PrintWriter out = new PrintWriter(bw)) {
+            out.println("digraph {");
+            out.println("  rankdir=LR;");
 
+            for (Entity entity : isolated) {
+                out.println("  \"" + entity.getName() + "\";");
+            }
 
-        ProjectAnalysis projectClasses = analysis.keepOnlyProjectClasses();
+            out.println();
 
-        writer.writeDiagram("O_project-packages.dot", new PackageDiagram(projectClasses));
-        writer.writeDiagram("O_project-classes.dot", new ClassDiagram(projectClasses));
-        writer.writeDiagram("O_project-classes-partitioned.dot", new PartitionedClassDiagram(projectClasses));
+            for (Dependency d : raw.getDependencies()) {
+                Entity from = d.getFrom();
+                Entity to = d.getTo();
 
-        projectClasses.getPackageAnalysis().parallelStream().forEach(pack -> {
-            ProjectAnalysis filteredByPackage = analysis.keepOnlyAnalysisMatching(p -> p.equals(pack.getName()));
+                if (isolated.contains(from))
+                    out.println("  \"" + from.getName() + "\" -> \"" + to.getName() + "\";");
+            }
 
-            writer.writeDiagram("O_project-classes-partitioned-" + pack.getName() + ".dot",
-                                new PartitionedClassDiagram(filteredByPackage));
-        });
+            out.println("}");
+        }
     }
 }

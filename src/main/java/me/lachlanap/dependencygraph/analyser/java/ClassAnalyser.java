@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 public class ClassAnalyser {
 
     public AnalysisBuilder analyse(ClassFile classFile) {
-        Entity entity = new Entity(classFile.getName());
+        Entity entity = entityFor(classFile.getName());
         List<Dependency> dependencies = new ArrayList<>();
 
         dependencies.add(pub(entity, classFile.getParent()));
@@ -69,10 +69,21 @@ public class ClassAnalyser {
     }
 
     private Dependency pub(Entity from, String name) {
-        return new Dependency(from, new Entity(name), CouplingStrength.Public);
+        return new Dependency(from, entityFor(name), CouplingStrength.Public);
     }
 
     private Dependency impl(Entity from, String name) {
-        return new Dependency(from, new Entity(name), CouplingStrength.Implementation);
+        return new Dependency(from, entityFor(name), CouplingStrength.Implementation);
+    }
+
+    private Entity entityFor(String name) {
+        return new Entity(name, new Entity(packageOf(name)));
+    }
+
+    private String packageOf(String className) {
+        if(className.indexOf('.') == -1)
+            return "";
+        else
+            return className.substring(0, className.lastIndexOf('.'));
     }
 }

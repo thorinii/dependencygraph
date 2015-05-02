@@ -105,7 +105,7 @@ public class Parser {
             if (index == -1)
                 break;
             else {
-                if (Character.isDigit(className.charAt(index + 1)))
+                if (index < className.length()-1 && Character.isDigit(className.charAt(index + 1)))
                     isPrivateInnerClass &= true;
                 index++;
             }

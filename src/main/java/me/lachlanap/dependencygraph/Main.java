@@ -24,21 +24,25 @@ import java.util.stream.Collectors;
 public class Main {
 
     public static void main(String[] args) throws IOException {
-        Path out;
-        List<Path> toAnalyse;
-
         if (args.length < 2) {
             System.out.println("Usage:\n"
                                        + "java -cp ... "
                                        + Main.class.getName() + " "
                                        + "<output directory> <directory or jar> [<directory or jar>...]");
-            out = path("out");
-            toAnalyse = Collections.singletonList(path("target/classes"));
+            analyse("out", Collections.singletonList("target/classes"));
         } else {
-            out = path(args[0]);
-            toAnalyse = Arrays.stream(args).skip(1).map(Main::path).collect(Collectors.toList());
+            analyse(args[0], Arrays.stream(args).skip(1).collect(Collectors.toList()));
         }
 
+        // TODO: why need this?
+        System.exit(0);
+    }
+
+    private static void analyse(String out, List<String> toAnalyse) throws IOException {
+        analyse(path(out), toAnalyse.stream().map(Main::path).collect(Collectors.toList()));
+    }
+
+    private static void analyse(Path out, List<Path> toAnalyse) throws IOException {
         Spider spider = new CompositeSpider(
                 toAnalyse.stream().map(Main::spiderFor).collect(Collectors.toList()));
         Loader loader = new CompositeLoader(
@@ -51,9 +55,6 @@ public class Main {
                                                        INNER_CLASS_REWRITER);
 
         da.analyse(out, true);
-
-        // TODO: why need this?
-        System.exit(0);
     }
 
     private static Path path(String p) {

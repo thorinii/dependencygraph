@@ -56,12 +56,28 @@ public class DependencyAnalyser {
         ThreadSafeLoader loader = new CompositeLoader(
                 toAnalyse.stream().map(this::loaderFor).collect(Collectors.toList()));
 
-        return ProjectAnalyser.analyse(
+        return analyse(
                 spider,
                 loader,
                 new Parser(),
                 new ClassAnalyser(),
                 INNER_CLASS_REWRITER);
+    }
+
+    private Analysis analyse(Spider spider,
+                             Loader loader,
+                             Parser parse,
+                             ClassAnalyser classAnalyser,
+                             Rewriter rewriter) {
+        AnalysisBuilder entities = spider.findClassesToAnalyse().parallelStream()
+                .map(loader::load)
+                .map(parse::parse)
+                .map(classAnalyser::analyse)
+                .reduce(AnalysisBuilder.empty(), AnalysisBuilder::merge);
+
+        AnalysisBuilder rewritten = entities.rewrite(rewriter);
+
+        return rewritten.build();
     }
 
     private static final Rewriter INNER_CLASS_REWRITER = e -> {

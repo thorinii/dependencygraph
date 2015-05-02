@@ -57,7 +57,7 @@ public class AnalysisBuilder {
                                            .collect(Collectors.toList()));
     }
 
-    public AnalysisBuilder rewrite(Function<Entity, Entity> map) {
+    public AnalysisBuilder rewrite(Rewriter map) {
         List<Entity> rewrittenProjectEntities = projectEntities.stream()
                 .map(map::apply)
                 .collect(Collectors.toList());

@@ -30,11 +30,8 @@ public class DependencyAnalyser {
     }
 
     public void analyse() throws IOException {
-        System.out.println("Initialising");
-        ProjectAnalyser analyser = buildAnalyser(config.toAnalyse);
-
         System.out.println("Analysing project");
-        Analysis raw = analyser.analyse();
+        Analysis raw = analyse(config.toAnalyse);
 
         if (config.filterCoreJava()) { // TODO: refactor this into Java specific
             raw = new AnalysisBuilder(raw).removeDependencies("java.").build();
@@ -43,7 +40,8 @@ public class DependencyAnalyser {
         Util.createBlankDirectory(config.outputPath);
 
         System.out.println("Dumping raw analysis");
-        dumpRaw(config.outputPath.resolve("raw.json"), raw);
+        dumpRawJson(config.outputPath.resolve("raw.json"), raw);
+        dumpRawText(config.outputPath.resolve("raw.txt"), raw);
 
         System.out.println("Generating diagrams");
         writeDiagrams("all", raw, false);
@@ -51,6 +49,28 @@ public class DependencyAnalyser {
 
         System.out.println("Done");
     }
+
+    private Analysis analyse(List<Path> toAnalyse) {
+        Spider spider = new CompositeSpider(
+                toAnalyse.stream().map(this::spiderFor).collect(Collectors.toList()));
+        ThreadSafeLoader loader = new CompositeLoader(
+                toAnalyse.stream().map(this::loaderFor).collect(Collectors.toList()));
+
+        return ProjectAnalyser.analyse(
+                spider,
+                loader,
+                new Parser(),
+                new ClassAnalyser(),
+                INNER_CLASS_REWRITER);
+    }
+
+    private static final Rewriter INNER_CLASS_REWRITER = e -> {
+        int index = e.getName().indexOf('$');
+        if (index >= 0) {
+            return e.changeName(e.getName().substring(0, index));
+        } else
+            return e;
+    };
 
     private void writeDiagrams(String prefix, Analysis raw, boolean stripPrefix) throws IOException {
         writeClasses(config.outputPath.resolve(prefix + "-classes.dot"), raw, false, stripPrefix);
@@ -61,19 +81,6 @@ public class DependencyAnalyser {
         Analysis packages = new AnalysisBuilder(raw).useParent().build();
         writeClasses(config.outputPath.resolve(prefix + "-packages.dot"), packages, false, false);
         writeClasses(config.outputPath.resolve(prefix + "-packages-impl.dot"), packages, true, false);
-    }
-
-    private ProjectAnalyser buildAnalyser(List<Path> toAnalyse) {
-        Spider spider = new CompositeSpider(
-                toAnalyse.stream().map(this::spiderFor).collect(Collectors.toList()));
-        ThreadSafeLoader loader = new CompositeLoader(
-                toAnalyse.stream().map(this::loaderFor).collect(Collectors.toList()));
-
-        return new ProjectAnalyser(
-                spider,
-                loader,
-                new Parser(),
-                new ClassAnalyser());
     }
 
     private Spider spiderFor(Path toAnalyse) {
@@ -96,7 +103,7 @@ public class DependencyAnalyser {
             throw new UnsupportedOperationException("Don't know how to read " + toAnalyse);
     }
 
-    private void dumpRaw(Path toFile, Analysis raw) throws IOException {
+    private void dumpRawJson(Path toFile, Analysis raw) throws IOException {
         Map<String, Integer> entityIds = new HashMap<>();
         int nextId = 0;
         try (BufferedWriter bw = Files.newBufferedWriter(toFile, StandardCharsets.UTF_8);
@@ -133,8 +140,29 @@ public class DependencyAnalyser {
 
             out.println(" ]\n}");
         }
+    }
 
-        System.out.println(raw);
+    private void dumpRawText(Path toFile, Analysis raw) throws IOException {
+        try (BufferedWriter bw = Files.newBufferedWriter(toFile, StandardCharsets.UTF_8);
+             PrintWriter out = new PrintWriter(bw)) {
+
+            List<Dependency> sortedDependencies =
+                    raw.getDependencies().stream()
+                            .sorted((a, b) -> {
+                                int cmp = a.getFrom().getName().compareTo(b.getFrom().getName());
+                                if (cmp == 0) {
+                                    return a.getTo().getName().compareTo(b.getTo().getName());
+                                } else
+                                    return cmp;
+                            })
+                            .collect(Collectors.toList());
+            for (Dependency d : sortedDependencies) {
+                Entity from = d.getFrom();
+                Entity to = d.getTo();
+
+                out.println(from.getName() + " -> " + to.getName());
+            }
+        }
     }
 
     private void writeClasses(Path toFile, Analysis raw, boolean impl, boolean stripPrefix) throws IOException {

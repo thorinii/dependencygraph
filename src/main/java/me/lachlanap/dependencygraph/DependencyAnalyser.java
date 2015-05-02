@@ -22,30 +22,24 @@ import java.util.stream.Collectors;
  * @author Lachlan Phillips
  */
 public class DependencyAnalyser {
-
-    private final DependencyAnalyserConfig config;
-
-    public DependencyAnalyser(DependencyAnalyserConfig config) {
-        this.config = config;
-    }
-
-    public void analyse() throws IOException {
+    
+    public void analyse(Path out, List<Path> toAnalyse, boolean filterCoreJava) throws IOException {
         System.out.println("Analysing project");
-        Analysis raw = analyse(config.toAnalyse);
+        Analysis raw = analyse(toAnalyse);
 
-        if (config.filterCoreJava()) { // TODO: refactor this into Java specific
+        if (filterCoreJava) { // TODO: refactor this into Java specific
             raw = new AnalysisBuilder(raw).removeDependencies("java.").build();
         }
 
-        Util.createBlankDirectory(config.outputPath);
+        Util.createBlankDirectory(out);
 
         System.out.println("Dumping raw analysis");
-        dumpRawJson(config.outputPath.resolve("raw.json"), raw);
-        dumpRawText(config.outputPath.resolve("raw.txt"), raw);
+        dumpRawJson(out.resolve("raw.json"), raw);
+        dumpRawText(out.resolve("raw.txt"), raw);
 
         System.out.println("Generating diagrams");
-        writeDiagrams("all", raw, false);
-        writeDiagrams("proj", new AnalysisBuilder(raw).removeNonProjectDependencies().build(), true);
+        writeDiagrams(out, "all", raw, false);
+        writeDiagrams(out, "proj", new AnalysisBuilder(raw).removeNonProjectDependencies().build(), true);
 
         System.out.println("Done");
     }
@@ -88,15 +82,15 @@ public class DependencyAnalyser {
             return e;
     };
 
-    private void writeDiagrams(String prefix, Analysis raw, boolean stripPrefix) throws IOException {
-        writeClasses(config.outputPath.resolve(prefix + "-classes.dot"), raw, false, stripPrefix);
-        writeClasses(config.outputPath.resolve(prefix + "-classes-impl.dot"), raw, true, stripPrefix);
+    private void writeDiagrams(Path out, String prefix, Analysis raw, boolean stripPrefix) throws IOException {
+        writeClasses(out.resolve(prefix + "-classes.dot"), raw, false, stripPrefix);
+        writeClasses(out.resolve(prefix + "-classes-impl.dot"), raw, true, stripPrefix);
 
-        writeIsolatedClasses(config.outputPath.resolve(prefix + "-classes-isolated.dot"), raw, stripPrefix);
+        writeIsolatedClasses(out.resolve(prefix + "-classes-isolated.dot"), raw, stripPrefix);
 
         Analysis packages = new AnalysisBuilder(raw).useParent().build();
-        writeClasses(config.outputPath.resolve(prefix + "-packages.dot"), packages, false, false);
-        writeClasses(config.outputPath.resolve(prefix + "-packages-impl.dot"), packages, true, false);
+        writeClasses(out.resolve(prefix + "-packages.dot"), packages, false, false);
+        writeClasses(out.resolve(prefix + "-packages-impl.dot"), packages, true, false);
     }
 
     private Spider spiderFor(Path toAnalyse) {

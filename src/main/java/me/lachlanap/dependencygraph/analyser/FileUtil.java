@@ -13,15 +13,7 @@ import java.nio.file.attribute.BasicFileAttributes;
  *
  * @author Lachlan Phillips
  */
-public class Util {
-
-    public static URL pathToUrl(Path path) {
-        try {
-            return path.toUri().toURL();
-        } catch (MalformedURLException murle) {
-            throw new RuntimeException("Path" + path + " is not a valid URL", murle);
-        }
-    }
+public class FileUtil {
 
     public static void createBlankDirectory(Path directory) {
         if (Files.exists(directory))

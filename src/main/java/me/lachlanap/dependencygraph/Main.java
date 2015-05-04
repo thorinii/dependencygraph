@@ -1,17 +1,7 @@
 package me.lachlanap.dependencygraph;
 
-import me.lachlanap.dependencygraph.analyser.DependencyAnalyser;
-import me.lachlanap.dependencygraph.analyser.Rewriter;
-import me.lachlanap.dependencygraph.analyser.java.ClassAnalyser;
-import me.lachlanap.dependencygraph.analyser.Loader;
-import me.lachlanap.dependencygraph.analyser.java.Parser;
-import me.lachlanap.dependencygraph.analyser.Spider;
-import me.lachlanap.dependencygraph.analyser.CompositeSpider;
-import me.lachlanap.dependencygraph.analyser.DirectorySpider;
-import me.lachlanap.dependencygraph.analyser.java.JarSpider;
-import me.lachlanap.dependencygraph.analyser.CompositeLoader;
-import me.lachlanap.dependencygraph.analyser.DirectoryLoader;
-import me.lachlanap.dependencygraph.analyser.java.JarLoader;
+import me.lachlanap.dependencygraph.analyser.*;
+import me.lachlanap.dependencygraph.analyser.java.*;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -50,9 +40,7 @@ public class Main {
                 toAnalyse.stream().map(Main::loaderFor).collect(Collectors.toList()));
 
         DependencyAnalyser da = new DependencyAnalyser(spider,
-                                                       loader,
-                                                       new Parser(),
-                                                       new ClassAnalyser(),
+                                                       new JavaEntityAnalyser(loader),
                                                        INNER_CLASS_REWRITER);
 
         da.analyse(out, true);

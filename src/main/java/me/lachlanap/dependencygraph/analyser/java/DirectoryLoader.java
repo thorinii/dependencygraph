@@ -1,4 +1,4 @@
-package me.lachlanap.dependencygraph.analyser;
+package me.lachlanap.dependencygraph.analyser.java;
 
 import java.io.IOException;
 import java.io.InputStream;

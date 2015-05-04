@@ -1,8 +1,5 @@
 package me.lachlanap.dependencygraph.analyser;
 
-import me.lachlanap.dependencygraph.analyser.java.ClassAnalyser;
-import me.lachlanap.dependencygraph.analyser.java.Parser;
-
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -17,16 +14,12 @@ import java.util.stream.Collectors;
  */
 public class DependencyAnalyser {
     private final Spider spider;
-    private final Loader loader;
-    private final Parser parser;
-    private final ClassAnalyser analyser;
+    private final EntityAnalyser entityAnalyser;
     private final Rewriter rewriter;
 
-    public DependencyAnalyser(Spider spider, Loader loader, Parser parser, ClassAnalyser analyser, Rewriter rewriter) {
+    public DependencyAnalyser(Spider spider, EntityAnalyser entityAnalyser, Rewriter rewriter) {
         this.spider = spider;
-        this.loader = loader;
-        this.parser = parser;
-        this.analyser = analyser;
+        this.entityAnalyser = entityAnalyser;
         this.rewriter = rewriter;
     }
 
@@ -38,7 +31,7 @@ public class DependencyAnalyser {
             raw = new AnalysisBuilder(raw).removeDependencies("java.").build();
         }
 
-        Util.createBlankDirectory(out);
+        FileUtil.createBlankDirectory(out);
 
         System.out.println("Dumping raw analysis");
         dumpRawJson(out.resolve("raw.json"), raw);
@@ -52,11 +45,10 @@ public class DependencyAnalyser {
     }
 
     private Analysis analyse() {
-        AnalysisBuilder entities = spider.findClassesToAnalyse().parallelStream()
-                .map(loader::load)
-                .map(parser::parse)
-                .map(analyser::analyse)
-                .reduce(AnalysisBuilder.empty(), AnalysisBuilder::merge);
+        AnalysisBuilder entities =
+                spider.findClassesToAnalyse().parallelStream()
+                        .map(entityAnalyser::analyse)
+                        .reduce(AnalysisBuilder.empty(), AnalysisBuilder::merge);
 
         AnalysisBuilder rewritten = entities.rewrite(rewriter);
 
@@ -64,14 +56,14 @@ public class DependencyAnalyser {
     }
 
     private void writeDiagrams(Path out, String prefix, Analysis raw, boolean stripPrefix) throws IOException {
-        writeClasses(out.resolve(prefix + "-classes.dot"), raw, false, stripPrefix);
-        writeClasses(out.resolve(prefix + "-classes-impl.dot"), raw, true, stripPrefix);
+        writeEntities(out.resolve(prefix + "-classes.dot"), raw, false, stripPrefix);
+        writeEntities(out.resolve(prefix + "-classes-impl.dot"), raw, true, stripPrefix);
 
-        writeIsolatedClasses(out.resolve(prefix + "-classes-isolated.dot"), raw, stripPrefix);
+        writeUnusedEntities(out.resolve(prefix + "-classes-isolated.dot"), raw, stripPrefix);
 
         Analysis packages = new AnalysisBuilder(raw).useParent().build();
-        writeClasses(out.resolve(prefix + "-packages.dot"), packages, false, stripPrefix);
-        writeClasses(out.resolve(prefix + "-packages-impl.dot"), packages, true, stripPrefix);
+        writeEntities(out.resolve(prefix + "-packages.dot"), packages, false, stripPrefix);
+        writeEntities(out.resolve(prefix + "-packages-impl.dot"), packages, true, stripPrefix);
     }
 
     private void dumpRawJson(Path toFile, Analysis raw) throws IOException {
@@ -136,7 +128,7 @@ public class DependencyAnalyser {
         }
     }
 
-    private void writeClasses(Path toFile, Analysis raw, boolean impl, boolean stripPrefix) throws IOException {
+    private void writeEntities(Path toFile, Analysis raw, boolean impl, boolean stripPrefix) throws IOException {
         try (BufferedWriter bw = Files.newBufferedWriter(toFile, StandardCharsets.UTF_8);
              PrintWriter out = new PrintWriter(bw)) {
             out.println("digraph {");
@@ -163,7 +155,7 @@ public class DependencyAnalyser {
         }
     }
 
-    private void writeIsolatedClasses(Path toFile, Analysis raw, boolean stripPrefix) throws IOException {
+    private void writeUnusedEntities(Path toFile, Analysis raw, boolean stripPrefix) throws IOException {
         Set<Entity> isolated = new HashSet<>(raw.getEntities());
 
         for (Dependency d : raw.getDependencies())
@@ -194,7 +186,7 @@ public class DependencyAnalyser {
 
     private String name(Entity e, boolean stripPrefix, Analysis raw) {
         String stripped = stripPrefix ? e.getName(raw.getCommonPrefix()) : e.getName();
-        if(stripped.startsWith("."))
+        if (stripped.startsWith("."))
             stripped = stripped.substring(1);
 
         if (stripped.isEmpty())

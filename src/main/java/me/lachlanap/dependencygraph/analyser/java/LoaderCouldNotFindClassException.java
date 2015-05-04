@@ -1,4 +1,4 @@
-package me.lachlanap.dependencygraph.analyser;
+package me.lachlanap.dependencygraph.analyser.java;
 
 /**
  *

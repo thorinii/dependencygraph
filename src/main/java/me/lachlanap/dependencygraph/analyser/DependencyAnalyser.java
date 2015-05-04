@@ -7,6 +7,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 /**
@@ -23,15 +24,12 @@ public class DependencyAnalyser {
         this.rewriter = rewriter;
     }
 
-    public void analyse(Log log, Path out, boolean filterCoreJava) throws IOException {
+    public void analyseAndReport(Log log, Path out, UnaryOperator<Analysis> filter) throws IOException {
         log.info("Analysing");
         Analysis raw = analyse();
 
         log.info("Filtering");
-        if (filterCoreJava) { // TODO: refactor this into Java specific
-            raw = new AnalysisBuilder(raw).filterDependenciesByTarget(n -> !n.startsWith("java.")).build();
-            raw = new AnalysisBuilder(raw).filterEntitiesByName(n -> !n.contains("Exception")).build();
-        }
+        raw = filter.apply(raw);
 
         FileUtil.createBlankDirectory(out);
 

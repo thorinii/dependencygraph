@@ -12,9 +12,13 @@ public class Analysis {
     private final String commonPrefix;
 
     public Analysis(List<Entity> entities, List<Dependency> dependencies) {
+        this(entities, dependencies, null);
+    }
+
+    public Analysis(List<Entity> entities, List<Dependency> dependencies, String commonPrefix) {
         this.entities = entities;
         this.dependencies = dependencies;
-        this.commonPrefix = findCommonPrefix(entities);
+        this.commonPrefix = commonPrefix == null ? findCommonPrefix(entities) : commonPrefix;
     }
 
     private String findCommonPrefix(List<Entity> entities) {
@@ -51,7 +55,7 @@ public class Analysis {
     public String toString() {
         return "Analysis{" +
                 " entities=\n  " + entities.stream().map(Entity::toString).reduce((a, b) -> a + ",\n  " + b).orElse("") +
-                "\ndependencies=" + dependencies.stream().map(Dependency::toString).reduce((a, b) -> a + ",\n  " + b).orElse("") +
+                "\n dependencies=\n  " + dependencies.stream().map(Dependency::toString).reduce((a, b) -> a + ",\n  " + b).orElse("") +
                 '}';
     }
 }

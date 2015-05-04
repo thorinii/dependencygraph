@@ -30,7 +30,7 @@ public class DependencyAnalyser {
         log.info("Filtering");
         if (filterCoreJava) { // TODO: refactor this into Java specific
             raw = new AnalysisBuilder(raw).filterDependenciesByTarget(n -> !n.startsWith("java.")).build();
-            raw = new AnalysisBuilder(raw).filterEntities(n -> !n.contains("Exception")).build();
+            raw = new AnalysisBuilder(raw).filterEntitiesByName(n -> !n.contains("Exception")).build();
         }
 
         FileUtil.createBlankDirectory(out);
@@ -60,6 +60,7 @@ public class DependencyAnalyser {
     private void writeDiagrams(Path out, String prefix, Analysis raw, boolean stripPrefix) throws IOException {
         writeEntities(out.resolve(prefix + "-classes.dot"), raw, false, stripPrefix);
         writeEntities(out.resolve(prefix + "-classes-impl.dot"), raw, true, stripPrefix);
+        writePerParentInOut(out, prefix, raw, true, stripPrefix);
 
         writeUnusedEntities(out.resolve(prefix + "-classes-isolated.dot"), raw, stripPrefix);
 
@@ -154,6 +155,65 @@ public class DependencyAnalyser {
             }
 
             out.println("}");
+        }
+    }
+
+    private void writePerParentInOut(Path to, String prefix, Analysis raw, boolean impl, boolean stripPrefix) throws IOException {
+        Map<Entity, Set<Entity>> groups = raw.getEntities().stream().collect(Collectors.groupingBy(Entity::getParent, Collectors.toSet()));
+
+        for (Map.Entry<Entity, Set<Entity>> e : groups.entrySet()) {
+            Entity parent = e.getKey();
+            Set<Entity> group = e.getValue();
+
+            Analysis a = new AnalysisBuilder(raw).filterEntities(group::contains).build();
+
+            Set<Entity> others = new HashSet<>();
+            others.addAll(a.getDependencies().stream().map(Dependency::getFrom).collect(Collectors.toSet()));
+            others.addAll(a.getDependencies().stream().map(Dependency::getTo).collect(Collectors.toSet()));
+            others.removeAll(group);
+
+
+            try (BufferedWriter bw = Files.newBufferedWriter(
+                    to.resolve(prefix + "-classes-" + parent.getName() + ".dot"),
+                    StandardCharsets.UTF_8);
+                 PrintWriter out = new PrintWriter(bw)) {
+                out.println("digraph {");
+                out.println("  rankdir=LR;");
+
+                out.println("  subgraph cluster_group {");
+                out.println("    style=filled;");
+                out.println("    color=lightgrey;");
+                out.println("    node [style=filled,color=white];");
+                out.println("    label=\"" + parent.getName() + "\";");
+                for (Entity entity : group) {
+                    out.println("    \"" + name(entity, stripPrefix, a) + "\";");
+                }
+                out.println("  }");
+
+                out.println();
+                out.println("  node [color=grey];");
+
+                for (Entity entity : others) {
+                    out.println("  \"" + name(entity, stripPrefix, a) + "\";");
+                }
+
+                out.println();
+
+                for (Dependency d : a.getDependencies()) {
+                    Entity from = d.getFrom();
+                    Entity to1 = d.getTo();
+
+                    if (d.getStrength() == CouplingStrength.Implementation && !impl)
+                        continue;
+
+                    boolean isOutside = (others.contains(d.getFrom()) || others.contains(d.getTo()));
+                    out.println("  \"" + name(from, stripPrefix, a) + "\" -> \"" + name(to1, stripPrefix, a) + "\"" +
+                                        "[weight=" + (isOutside ? "1" : "10") + "," +
+                                        "color=" + (isOutside ? "grey" : "black") + "];");
+                }
+
+                out.println("}");
+            }
         }
     }
 

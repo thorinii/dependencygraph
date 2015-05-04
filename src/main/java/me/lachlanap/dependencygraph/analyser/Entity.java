@@ -23,7 +23,11 @@ public final class Entity {
     }
 
     public String getName(String commonPrefix) {
-        return name.substring(commonPrefix.length());
+        try {
+            return name.substring(commonPrefix.length());
+        } catch(StringIndexOutOfBoundsException e) {
+            throw new IllegalArgumentException("Cannot strip prefix " + commonPrefix + " from " + name, e);
+        }
     }
 
     public boolean hasParent() {

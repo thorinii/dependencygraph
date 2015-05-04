@@ -39,20 +39,20 @@ public class DependencyAnalyser {
 
         log.info("Generating diagrams");
         writeDiagrams(out, "all", raw, false);
-        writeDiagrams(out, "proj", new AnalysisBuilder(raw).removeNonProjectDependencies().build(), true);
+        writeDiagrams(out, "proj", raw.removeNonProjectDependencies(), true);
 
         log.info("Done");
     }
 
     private Analysis analyse() {
-        AnalysisBuilder entities =
+        Analysis entities =
                 spider.findClassesToAnalyse().parallelStream()
                         .map(entityAnalyser::analyse)
-                        .reduce(AnalysisBuilder.empty(), AnalysisBuilder::merge);
+                        .reduce(AnalysisBuilder.empty(), AnalysisBuilder::merge).build();
 
-        AnalysisBuilder rewritten = entities.rewrite(rewriter);
+        Analysis rewritten = entities.rewrite(rewriter);
 
-        return rewritten.build();
+        return rewritten;
     }
 
     private void writeDiagrams(Path out, String prefix, Analysis raw, boolean stripPrefix) throws IOException {
@@ -62,7 +62,7 @@ public class DependencyAnalyser {
 
         writeUnusedEntities(out.resolve(prefix + "-classes-isolated.dot"), raw, stripPrefix);
 
-        Analysis packages = new AnalysisBuilder(raw).useParent().build();
+        Analysis packages = raw.useParent();
         writeEntities(out.resolve(prefix + "-packages.dot"), packages, false, stripPrefix);
         writeEntities(out.resolve(prefix + "-packages-impl.dot"), packages, true, stripPrefix);
     }
@@ -163,7 +163,7 @@ public class DependencyAnalyser {
             Entity parent = e.getKey();
             Set<Entity> group = e.getValue();
 
-            Analysis a = new AnalysisBuilder(raw).filterEntities(group::contains).build();
+            Analysis a = raw.filterEntities(group::contains);
 
             Set<Entity> others = new HashSet<>();
             others.addAll(a.getDependencies().stream().map(Dependency::getFrom).collect(Collectors.toSet()));

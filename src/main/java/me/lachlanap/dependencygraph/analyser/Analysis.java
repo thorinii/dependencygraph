@@ -1,6 +1,9 @@
 package me.lachlanap.dependencygraph.analyser;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -50,6 +53,100 @@ public class Analysis {
     public String getCommonPrefix() {
         return commonPrefix;
     }
+
+
+    /**
+     * Does not filter project entities.
+     */
+    public Analysis filterDependenciesByTarget(Predicate<String> keepByName) {
+        return normalised(entities,
+                          dependencies.stream()
+                                  .filter(d -> keepByName.test(d.getTo().getName()))
+                                  .collect(Collectors.toList()),
+                          commonPrefix);
+    }
+
+    public Analysis filterEntitiesByName(Predicate<String> keepByName) {
+        return filterEntities(e -> keepByName.test(e.getName()));
+    }
+
+    public Analysis filterEntities(Predicate<Entity> keepByName) {
+        return normalised(entities.stream()
+                                  .filter(keepByName)
+                                  .collect(Collectors.toList()),
+                          dependencies.stream()
+                                  .filter(d -> keepByName.test(d.getFrom()) || keepByName.test(d.getTo()))
+                                  .collect(Collectors.toList()),
+                          commonPrefix);
+    }
+
+    public Analysis removeNonProjectDependencies() {
+        return normalised(entities,
+                          dependencies.stream()
+                                  .filter(d -> entities.contains(d.getTo()))
+                                  .collect(Collectors.toList()),
+                          commonPrefix);
+    }
+
+    public Analysis rewrite(Rewriter map) {
+        List<Entity> rewrittenProjectEntities = entities.stream()
+                .map(map::apply)
+                .collect(Collectors.toList());
+
+        List<Dependency> rewrittenDependencies = dependencies.stream()
+                .map(d -> new Dependency(map.apply(d.getFrom()), map.apply(d.getTo()), d.getStrength()))
+                .collect(Collectors.toList());
+
+        return normalised(rewrittenProjectEntities, rewrittenDependencies, commonPrefix);
+    }
+
+    public Analysis useParent() {
+        List<Entity> rewrittenProjectEntities = entities.stream()
+                .map(Entity::getParent)
+                .collect(Collectors.toList());
+
+        List<Dependency> rewrittenDependencies = dependencies.stream()
+                .map(d -> {
+                    if (d.getTo().hasParent())
+                        return new Dependency(d.getFrom().getParent(), d.getTo().getParent(), d.getStrength());
+                    else
+                        return new Dependency(d.getFrom().getParent(), d.getTo(), d.getStrength());
+                })
+                .collect(Collectors.toList());
+
+        return normalised(rewrittenProjectEntities, rewrittenDependencies, null);
+    }
+
+    private Analysis normalised(List<Entity> entities, List<Dependency> dependencies, String commonPrefix) {
+        entities = entities.stream()
+                .collect(Collectors.groupingBy(Entity::getName))
+                .entrySet().stream()
+                .map(e -> e.getValue().get(0))
+                .collect(Collectors.toList());
+
+        Map<String, List<Entity>> canonical = entities.stream().collect(Collectors.groupingBy(Entity::getName));
+
+
+        Map<Dependency, List<Dependency>> duplicatesDependencies = dependencies.stream().collect(Collectors.groupingBy(a -> a));
+        dependencies = duplicatesDependencies.values().stream()
+                .map(d -> d.stream().reduce(Dependency::strongest).get())
+                .map(d -> normaliseDependency(d, canonical))
+                .filter(Dependency::isNotSelf)
+                .collect(Collectors.toList());
+
+        return new Analysis(entities, dependencies, commonPrefix);
+    }
+
+    private Dependency normaliseDependency(Dependency in, Map<String, List<Entity>> canonical) {
+        Entity from = in.getFrom();
+        Entity to = in.getTo();
+
+        from = canonical.getOrDefault(from.getName(), Collections.singletonList(from)).get(0);
+        to = canonical.getOrDefault(to.getName(), Collections.singletonList(to)).get(0);
+
+        return new Dependency(from, to, in.getStrength());
+    }
+
 
     @Override
     public String toString() {

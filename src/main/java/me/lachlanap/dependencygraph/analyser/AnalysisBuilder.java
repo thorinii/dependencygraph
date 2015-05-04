@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -23,12 +22,6 @@ public class AnalysisBuilder {
     private List<Dependency> dependencies;
     private String commonPrefix;
 
-    public AnalysisBuilder(Analysis a) {
-        this.projectEntities = a.getEntities();
-        this.dependencies = a.getDependencies();
-        this.commonPrefix = a.getCommonPrefix();
-    }
-
     private AnalysisBuilder(List<Entity> projectEntities, List<Dependency> dependencies, String commonPrefix) {
         this.projectEntities = projectEntities;
         this.dependencies = dependencies;
@@ -46,70 +39,6 @@ public class AnalysisBuilder {
         l.addAll(a);
         l.addAll(b);
         return l;
-    }
-
-    /**
-     * Does not filter project entities.
-     */
-    public AnalysisBuilder filterDependenciesByTarget(Predicate<String> keepByName) {
-        return new AnalysisBuilder(projectEntities,
-                                   dependencies.stream()
-                                           .filter(d -> keepByName.test(d.getTo().getName()))
-                                           .collect(Collectors.toList()),
-                                   commonPrefix);
-    }
-
-    public AnalysisBuilder filterEntitiesByName(Predicate<String> keepByName) {
-        return filterEntities(e -> keepByName.test(e.getName()));
-    }
-
-    public AnalysisBuilder filterEntities(Predicate<Entity> keepByName) {
-        return new AnalysisBuilder(projectEntities.stream()
-                                           .filter(keepByName)
-                                           .collect(Collectors.toList()),
-                                   dependencies.stream()
-                                           .filter(d -> keepByName.test(d.getFrom()) || keepByName.test(d.getTo()))
-                                           .collect(Collectors.toList()),
-                                   commonPrefix);
-    }
-
-    public AnalysisBuilder removeNonProjectDependencies() {
-        return new AnalysisBuilder(projectEntities,
-                                   dependencies.stream()
-                                           .filter(d -> projectEntities.contains(d.getTo()))
-                                           .collect(Collectors.toList()),
-                                   commonPrefix);
-    }
-
-    public AnalysisBuilder rewrite(Rewriter map) {
-        List<Entity> rewrittenProjectEntities = projectEntities.stream()
-                .map(map::apply)
-                .collect(Collectors.toList());
-
-        List<Dependency> rewrittenDependencies = dependencies.stream()
-                .map(d -> new Dependency(map.apply(d.getFrom()), map.apply(d.getTo()), d.getStrength()))
-                .collect(Collectors.toList());
-
-        return new AnalysisBuilder(rewrittenProjectEntities, rewrittenDependencies, commonPrefix);
-    }
-
-    public AnalysisBuilder useParent() {
-        normalise();
-
-        List<Entity> rewrittenProjectEntities = projectEntities.stream()
-                .map(Entity::getParent)
-                .collect(Collectors.toList());
-
-        List<Dependency> rewrittenDependencies = dependencies.stream()
-                .map(d -> {
-                    if (d.getTo().hasParent())
-                        return new Dependency(d.getFrom().getParent(), d.getTo().getParent(), d.getStrength());
-                    else
-                        return new Dependency(d.getFrom().getParent(), d.getTo(), d.getStrength());
-                })
-                .collect(Collectors.toList());
-
-        return new AnalysisBuilder(rewrittenProjectEntities, rewrittenDependencies, null);
     }
 
     private void normalise() {

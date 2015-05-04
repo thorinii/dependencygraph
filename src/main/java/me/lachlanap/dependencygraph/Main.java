@@ -43,9 +43,11 @@ public class Main {
                                                        new JavaEntityAnalyser(loader),
                                                        new JavaInnerClassRewriter());
 
-        da.analyseAndReport(new ConsoleLog(), out, raw -> raw
-                .filterDependenciesByTarget(n -> !n.startsWith("java."))
-                .filterEntitiesByName(n -> !n.contains("Exception")));
+        da.analyseAndReport(new ConsoleLog(),
+                            out,
+                            raw -> raw
+                                    .filterDependenciesByTarget(n -> !n.startsWith("java."))
+                                    .filterEntitiesByName(n -> !n.contains("Exception")));
     }
 
     private static Path path(String p) {

@@ -1,8 +1,6 @@
 package me.lachlanap.dependencygraph.analyser;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -88,6 +86,14 @@ public class Analysis {
                           commonPrefix);
     }
 
+    public Analysis filterRoots() {
+        Set<Entity> roots = new HashSet<>(entities);
+        for (Dependency d : dependencies)
+            roots.remove(d.getTo());
+
+        return normalised(new ArrayList<>(roots), dependencies, commonPrefix);
+    }
+
     public Analysis rewrite(Rewriter map) {
         List<Entity> rewrittenProjectEntities = entities.stream()
                 .map(map::apply)
@@ -132,6 +138,7 @@ public class Analysis {
                 .map(d -> d.stream().reduce(Dependency::strongest).get())
                 .map(d -> normaliseDependency(d, canonical))
                 .filter(Dependency::isNotSelf)
+                .filter(d -> canonical.containsKey(d.getFrom().getName()))
                 .collect(Collectors.toList());
 
         return new Analysis(entities, dependencies, commonPrefix);

@@ -1,21 +1,45 @@
 package me.lachlanap.dependencygraph.analyser;
 
+import java.io.BufferedWriter;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.io.PrintWriter;
 import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
+import java.util.function.UnaryOperator;
 
 /**
- *
  * @author Lachlan Phillips
  */
-public class FileUtil {
+public class AnalysisOutput {
+    private final Path root;
+    private final Analysis analysis;
 
-    public static void createBlankDirectory(Path directory) {
+    public AnalysisOutput(Path root, Analysis analysis) {
+        this.root = root;
+        this.analysis = analysis;
+    }
+
+    public void write(String filename, AnalysisWriter writer) throws IOException {
+        try (BufferedWriter bw = Files.newBufferedWriter(root.resolve(filename));
+             PrintWriter out = new PrintWriter(bw)) {
+            writer.write(analysis, out);
+        }
+    }
+
+    public AnalysisOutput filterAnalysis(UnaryOperator<Analysis> mapper) {
+        return new AnalysisOutput(root, mapper.apply(analysis));
+    }
+
+
+    public static AnalysisOutput createClean(Path root, Analysis analysis) {
+        createBlankDirectory(root);
+        return new AnalysisOutput(root, analysis);
+    }
+
+    private static void createBlankDirectory(Path directory) {
         if (Files.exists(directory))
             deleteDirectory(directory);
 

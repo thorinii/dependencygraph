@@ -1,6 +1,9 @@
 package me.lachlanap.dependencygraph;
 
-import me.lachlanap.dependencygraph.analyser.*;
+import me.lachlanap.dependencygraph.analyser.CompositeSpider;
+import me.lachlanap.dependencygraph.analyser.DependencyAnalyser;
+import me.lachlanap.dependencygraph.analyser.DirectorySpider;
+import me.lachlanap.dependencygraph.analyser.Spider;
 import me.lachlanap.dependencygraph.analyser.java.*;
 
 import java.io.IOException;
@@ -41,7 +44,7 @@ public class Main {
 
         DependencyAnalyser da = new DependencyAnalyser(spider,
                                                        new JavaEntityAnalyser(loader),
-                                                       INNER_CLASS_REWRITER);
+                                                       new JavaInnerClassRewriter());
 
         da.analyse(out, true);
     }
@@ -49,14 +52,6 @@ public class Main {
     private static Path path(String p) {
         return Paths.get(p);
     }
-
-    private static final Rewriter INNER_CLASS_REWRITER = e -> {
-        int index = e.getName().indexOf('$');
-        if (index >= 0) {
-            return e.changeName(e.getName().substring(0, index));
-        } else
-            return e;
-    };
 
     private static Spider spiderFor(Path toAnalyse) {
         if (Files.isDirectory(toAnalyse))
@@ -77,4 +72,5 @@ public class Main {
         } else
             throw new UnsupportedOperationException("Don't know how to read " + toAnalyse);
     }
+
 }

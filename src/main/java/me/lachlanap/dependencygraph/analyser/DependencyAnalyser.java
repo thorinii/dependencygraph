@@ -28,7 +28,8 @@ public class DependencyAnalyser {
         Analysis raw = analyse();
 
         if (filterCoreJava) { // TODO: refactor this into Java specific
-            raw = new AnalysisBuilder(raw).removeDependencies("java.").build();
+            raw = new AnalysisBuilder(raw).filterDependenciesByTarget(n -> !n.startsWith("java.")).build();
+            raw = new AnalysisBuilder(raw).filterEntities(n -> !n.contains("Exception")).build();
         }
 
         FileUtil.createBlankDirectory(out);

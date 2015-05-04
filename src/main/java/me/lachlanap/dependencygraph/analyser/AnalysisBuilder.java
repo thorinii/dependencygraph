@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -43,10 +43,19 @@ public class AnalysisBuilder {
         return l;
     }
 
-    public AnalysisBuilder removeDependencies(String startsWith) {
+    public AnalysisBuilder filterDependenciesByTarget(Predicate<String> keepByName) {
         return new AnalysisBuilder(projectEntities,
                                    dependencies.stream()
-                                           .filter(d -> !d.getTo().getName().startsWith(startsWith))
+                                           .filter(d -> keepByName.test(d.getTo().getName()))
+                                           .collect(Collectors.toList()));
+    }
+
+    public AnalysisBuilder filterEntities(Predicate<String> keepByName) {
+        return new AnalysisBuilder(projectEntities.stream()
+                                           .filter(e -> keepByName.test(e.getName()))
+                                           .collect(Collectors.toList()),
+                                   dependencies.stream()
+                                           .filter(d -> keepByName.test(d.getFrom().getName()) && keepByName.test(d.getTo().getName()))
                                            .collect(Collectors.toList()));
     }
 

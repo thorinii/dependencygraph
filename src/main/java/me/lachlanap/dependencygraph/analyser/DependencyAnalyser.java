@@ -1,6 +1,5 @@
 package me.lachlanap.dependencygraph.analyser;
 
-import me.lachlanap.dependencygraph.Util;
 import me.lachlanap.dependencygraph.analyser.java.ClassAnalyser;
 import me.lachlanap.dependencygraph.analyser.java.Parser;
 
@@ -71,8 +70,8 @@ public class DependencyAnalyser {
         writeIsolatedClasses(out.resolve(prefix + "-classes-isolated.dot"), raw, stripPrefix);
 
         Analysis packages = new AnalysisBuilder(raw).useParent().build();
-        writeClasses(out.resolve(prefix + "-packages.dot"), packages, false, false);
-        writeClasses(out.resolve(prefix + "-packages-impl.dot"), packages, true, false);
+        writeClasses(out.resolve(prefix + "-packages.dot"), packages, false, stripPrefix);
+        writeClasses(out.resolve(prefix + "-packages-impl.dot"), packages, true, stripPrefix);
     }
 
     private void dumpRawJson(Path toFile, Analysis raw) throws IOException {
@@ -194,6 +193,13 @@ public class DependencyAnalyser {
     }
 
     private String name(Entity e, boolean stripPrefix, Analysis raw) {
-        return stripPrefix ? e.getName(raw.getCommonPrefix()) : e.getName();
+        String stripped = stripPrefix ? e.getName(raw.getCommonPrefix()) : e.getName();
+        if(stripped.startsWith("."))
+            stripped = stripped.substring(1);
+
+        if (stripped.isEmpty())
+            return "(root)";
+        else
+            return stripped;
     }
 }

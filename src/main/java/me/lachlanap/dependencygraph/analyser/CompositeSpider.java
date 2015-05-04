@@ -1,7 +1,4 @@
-package me.lachlanap.dependencygraph.analyser.java.spider;
-
-import me.lachlanap.dependencygraph.analyser.Spider;
-import me.lachlanap.dependencygraph.analyser.java.SpiderException;
+package me.lachlanap.dependencygraph.analyser;
 
 import java.util.List;
 import java.util.stream.Collectors;

@@ -1,7 +1,4 @@
-package me.lachlanap.dependencygraph.analyser.io;
-
-import me.lachlanap.dependencygraph.analyser.Loader;
-import me.lachlanap.dependencygraph.analyser.java.LoadingFailedException;
+package me.lachlanap.dependencygraph.analyser;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

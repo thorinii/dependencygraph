@@ -1,4 +1,4 @@
-package me.lachlanap.dependencygraph;
+package me.lachlanap.dependencygraph.analyser;
 
 import java.io.IOException;
 import java.net.MalformedURLException;

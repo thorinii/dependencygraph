@@ -23,10 +23,11 @@ public class DependencyAnalyser {
         this.rewriter = rewriter;
     }
 
-    public void analyse(Path out, boolean filterCoreJava) throws IOException {
-        System.out.println("Analysing project");
+    public void analyse(Log log, Path out, boolean filterCoreJava) throws IOException {
+        log.info("Analysing");
         Analysis raw = analyse();
 
+        log.info("Filtering");
         if (filterCoreJava) { // TODO: refactor this into Java specific
             raw = new AnalysisBuilder(raw).filterDependenciesByTarget(n -> !n.startsWith("java.")).build();
             raw = new AnalysisBuilder(raw).filterEntities(n -> !n.contains("Exception")).build();
@@ -34,15 +35,15 @@ public class DependencyAnalyser {
 
         FileUtil.createBlankDirectory(out);
 
-        System.out.println("Dumping raw analysis");
+        log.info("Dumping raw analysis");
         dumpRawJson(out.resolve("raw.json"), raw);
         dumpRawText(out.resolve("raw.txt"), raw);
 
-        System.out.println("Generating diagrams");
+        log.info("Generating diagrams");
         writeDiagrams(out, "all", raw, false);
         writeDiagrams(out, "proj", new AnalysisBuilder(raw).removeNonProjectDependencies().build(), true);
 
-        System.out.println("Done");
+        log.info("Done");
     }
 
     private Analysis analyse() {
@@ -149,7 +150,7 @@ public class DependencyAnalyser {
                     continue;
 
                 out.println("  \"" + name(from, stripPrefix, raw) + "\" -> \"" + name(to, stripPrefix, raw) + "\"" +
-                                    "[color=\"" + (d.getStrength() == CouplingStrength.Public ? "black" : "grey") + "\"];");
+                                    "[weight=\"" + (d.getStrength() == CouplingStrength.Public ? "2" : "1") + "\"];");
             }
 
             out.println("}");

@@ -1,9 +1,6 @@
 package me.lachlanap.dependencygraph;
 
-import me.lachlanap.dependencygraph.analyser.CompositeSpider;
-import me.lachlanap.dependencygraph.analyser.DependencyAnalyser;
-import me.lachlanap.dependencygraph.analyser.DirectorySpider;
-import me.lachlanap.dependencygraph.analyser.Spider;
+import me.lachlanap.dependencygraph.analyser.*;
 import me.lachlanap.dependencygraph.analyser.java.*;
 
 import java.io.IOException;
@@ -46,7 +43,7 @@ public class Main {
                                                        new JavaEntityAnalyser(loader),
                                                        new JavaInnerClassRewriter());
 
-        da.analyse(out, true);
+        da.analyse(new ConsoleLog(), out, true);
     }
 
     private static Path path(String p) {

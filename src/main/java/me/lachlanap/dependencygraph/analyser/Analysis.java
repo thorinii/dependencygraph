@@ -91,7 +91,9 @@ public class Analysis {
         for (Dependency d : dependencies)
             roots.remove(d.getTo());
 
-        return normalised(new ArrayList<>(roots), dependencies, commonPrefix);
+        return normalised(new ArrayList<>(roots),
+                          dependencies.stream().filter(d -> roots.contains(d.getFrom())).collect(Collectors.toList()),
+                          commonPrefix);
     }
 
     public Analysis rewrite(Rewriter map) {
@@ -138,7 +140,6 @@ public class Analysis {
                 .map(d -> d.stream().reduce(Dependency::strongest).get())
                 .map(d -> normaliseDependency(d, canonical))
                 .filter(Dependency::isNotSelf)
-                .filter(d -> canonical.containsKey(d.getFrom().getName()))
                 .collect(Collectors.toList());
 
         return new Analysis(entities, dependencies, commonPrefix);

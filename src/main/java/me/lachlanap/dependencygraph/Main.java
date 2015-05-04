@@ -1,16 +1,17 @@
 package me.lachlanap.dependencygraph;
 
+import me.lachlanap.dependencygraph.analyser.DependencyAnalyser;
 import me.lachlanap.dependencygraph.analyser.Rewriter;
 import me.lachlanap.dependencygraph.analyser.java.ClassAnalyser;
-import me.lachlanap.dependencygraph.analyser.java.Loader;
+import me.lachlanap.dependencygraph.analyser.Loader;
 import me.lachlanap.dependencygraph.analyser.java.Parser;
-import me.lachlanap.dependencygraph.analyser.java.Spider;
+import me.lachlanap.dependencygraph.analyser.Spider;
 import me.lachlanap.dependencygraph.analyser.java.spider.CompositeSpider;
 import me.lachlanap.dependencygraph.analyser.java.spider.DirectorySpider;
 import me.lachlanap.dependencygraph.analyser.java.spider.JarSpider;
-import me.lachlanap.dependencygraph.io.CompositeLoader;
-import me.lachlanap.dependencygraph.io.DirectoryLoader;
-import me.lachlanap.dependencygraph.io.JarLoader;
+import me.lachlanap.dependencygraph.analyser.CompositeLoader;
+import me.lachlanap.dependencygraph.analyser.io.DirectoryLoader;
+import me.lachlanap.dependencygraph.analyser.java.io.JarLoader;
 
 import java.io.IOException;
 import java.nio.file.Files;

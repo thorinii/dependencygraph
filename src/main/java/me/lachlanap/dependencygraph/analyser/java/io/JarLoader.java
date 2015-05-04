@@ -1,6 +1,7 @@
-package me.lachlanap.dependencygraph.io;
+package me.lachlanap.dependencygraph.analyser.java.io;
 
-import me.lachlanap.dependencygraph.analyser.java.Loader;
+import me.lachlanap.dependencygraph.analyser.Loader;
+import me.lachlanap.dependencygraph.analyser.io.AbstractIOLoader;
 import me.lachlanap.dependencygraph.analyser.java.LoaderCouldNotFindClassException;
 import me.lachlanap.dependencygraph.analyser.java.LoadingFailedException;
 

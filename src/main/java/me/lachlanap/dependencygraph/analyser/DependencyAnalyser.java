@@ -38,7 +38,7 @@ public class DependencyAnalyser {
         writeDiagrams(output, "all", false);
 
         output = output.filterAnalysis(Analysis::removeNonProjectDependencies);
-        output.filterAnalysis(Analysis::filterRoots).write("roots.txt", new TextWriter());
+        output.filterAnalysis(Analysis::filterRoots).write("roots.txt", new TextEntityWriter());
         writeDiagrams(output, "proj", true);
         writePerParentInOut(output, raw.removeNonProjectDependencies());
 

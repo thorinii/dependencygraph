@@ -28,6 +28,8 @@ public class JsonWriter implements AnalysisWriter {
 
         for (Dependency d : a.getDependencies()) {
             Entity from = d.getFrom();
+            if (!entityIds.containsKey(from.getName()))
+                continue;
             int fromId = entityIds.get(from.getName());
 
             if (entityIds.containsKey(d.getTo().getName())) {
